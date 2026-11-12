@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "Kitap Defterim",
+  "short_name": "Kitaplarım",
+  "description": "Kişisel kitaplığın ve okuma günlüğün.",
+  "lang": "tr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f2ec",
+  "theme_color": "#315b4c",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
