@@ -1,0 +1,156 @@
+[
+  {
+    "id": "1",
+    "title": "Tanrı'nın Formülü",
+    "author": "Jose Rodrigues Dos Santos",
+    "month": "Ekim",
+    "year": 2025,
+    "status": "read",
+    "rating": 5,
+    "notes": "Okundu.",
+    "cover": ""
+  },
+  {
+    "id": "2",
+    "title": "Enkaz",
+    "author": "Clive Cussler",
+    "month": "Kasım",
+    "year": 2025,
+    "status": "read",
+    "rating": 4,
+    "notes": "Okundu.",
+    "cover": ""
+  },
+  {
+    "id": "3",
+    "title": "Aptalı Tanımak",
+    "author": "Celal Şengör",
+    "month": "Aralık",
+    "year": 2025,
+    "status": "read",
+    "rating": 5,
+    "notes": "Kasım-Aralık 2025 dönemi",
+    "cover": ""
+  },
+  {
+    "id": "4",
+    "title": "Buzdağı",
+    "author": "Clive Cussler",
+    "month": "Aralık",
+    "year": 2025,
+    "status": "read",
+    "rating": 4,
+    "notes": "Okundu.",
+    "cover": ""
+  },
+  {
+    "id": "5",
+    "title": "Şu hortumlu dünyada fil yalnız bir hayvandır",
+    "author": "Ahmet Şerif İzgören",
+    "month": "Ocak",
+    "year": 2026,
+    "status": "read",
+    "rating": 4,
+    "notes": "Aralık 2025 - Ocak 2026 dönemi",
+    "cover": ""
+  },
+  {
+    "id": "6",
+    "title": "Cehennemdere Kanyonu",
+    "author": "Osman Pamukoğlu",
+    "month": "Ocak",
+    "year": 2026,
+    "status": "read",
+    "rating": 5,
+    "notes": "Okundu.",
+    "cover": ""
+  },
+  {
+    "id": "7",
+    "title": "Mavi Vurgun",
+    "author": "Clive Cussler",
+    "month": "Ocak",
+    "year": 2026,
+    "status": "read",
+    "rating": 4,
+    "notes": "Okundu.",
+    "cover": ""
+  },
+  {
+    "id": "8",
+    "title": "Komutanın Şüpheli Ölümü",
+    "author": "Cüneyt Özdemir",
+    "month": "Mart",
+    "year": 2026,
+    "status": "read",
+    "rating": 4,
+    "notes": "Okundu.",
+    "cover": ""
+  },
+  {
+    "id": "9",
+    "title": "Atomik Alışkanlıklar",
+    "author": "James Clear",
+    "month": "Mart",
+    "year": 2026,
+    "status": "current",
+    "rating": 0,
+    "notes": "Halen okunuyor.",
+    "cover": ""
+  },
+  {
+    "id": "10",
+    "title": "Cehennem",
+    "author": "Dan Brown",
+    "month": "Nisan",
+    "year": 2026,
+    "status": "current",
+    "rating": 0,
+    "notes": "Halen okunuyor.",
+    "cover": ""
+  },
+  {
+    "id": "11",
+    "title": "Rothschild İmparatorluğu",
+    "author": "Çeşitli",
+    "month": "Eylül",
+    "year": 2026,
+    "status": "current",
+    "rating": 0,
+    "notes": "Halen okunuyor.",
+    "cover": ""
+  },
+  {
+    "id": "12",
+    "title": "İsa'nın Son Sırrı",
+    "author": "Jose Rodrigues Dos Santos",
+    "month": "Ekim",
+    "year": 2026,
+    "status": "read",
+    "rating": 5,
+    "notes": "Okundu.",
+    "cover": ""
+  },
+  {
+    "id": "13",
+    "title": "Süleyman'ın Anahtarı",
+    "author": "Jose Rodrigues Dos Santos",
+    "month": "Kasım",
+    "year": 2026,
+    "status": "read",
+    "rating": 5,
+    "notes": "Okundu.",
+    "cover": ""
+  },
+  {
+    "id": "14",
+    "title": "Yaşam Sinyali",
+    "author": "Jose Rodrigues Dos Santos",
+    "month": "Kasım",
+    "year": 2026,
+    "status": "current",
+    "rating": 0,
+    "notes": "Halen okunuyor.",
+    "cover": ""
+  }
+]
