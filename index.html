@@ -30,7 +30,7 @@
 <label data-i18n="labelAuthor">Yazar adı</label><input id="author" required maxlength="100" placeholder="Örn. Lev Tolstoy">
 <button class="secondary" id="searchCoverBtn" type="button" style="margin-top:8px; width:100%;" data-i18n="btnSearchCover">🌐 İnternetten Kapak Bul ve Onayla</button>
 <div class="grid" style="margin-top:10px;">
-<div><label data-i18n="labelMonth">Okuduğum ay</label><select id="month" required><option value="" data-i18n="optMonth">Ay seç</option><option value="Ocak">Ocak</option><option value="Şubat">Şubat</option><option value="Mart">Mart</option><option value="Nisan">Nisan</option><option value="Mayıs">Mayıs</option><option value="Haziran">Haziran</option><option value="Temmuz">Temmuz</option><option value="Ağustos">Ağustos</option><option value="Eylül">Eylül</option><option value="Ekim">Ekim</option><option value="Kasım">Kasım</option><option value="Aralık">Aralık</option></select></div>
+<div><label data-i18n="labelMonth">Okuduğum ay</label><select id="month" required></select></div>
 <div><label data-i18n="labelYear">Yıl</label><input id="year" type="number" min="1900" max="2100" required></div>
 </div>
 <div class="grid">
@@ -72,7 +72,7 @@
 const GH_USER = 'korayekmekci';
 const GH_REPO = 'kitap-defterim';
 const GH_FILE = 'kitaplar.json';
-const GH_TOKEN = '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'; // Token'ınızı buraya yazın
+const GH_TOKEN = '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';
 
 let books = [], editing = null, fileSha = null, coverData = null;
 let currentLang = localStorage.getItem('kitapDefterim_lang') || 'tr';
@@ -326,8 +326,8 @@ $('langSelect').onchange = e => {
 };
 
 $('year').value = new Date().getFullYear();
-const months = monthsMap[currentLang] || monthsMap['tr'];
-$('month').value = months[new Date().getMonth()];
+const initialMonths = monthsMap[currentLang] || monthsMap['tr'];
+$('month').value = initialMonths[new Date().getMonth()];
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
@@ -338,7 +338,7 @@ async function loadFromCloud(){
         if(res.ok){
             const json = await res.json();
             if(Array.isArray(json)) books = json;
-            $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Cloud synced':currentLang==='de'?'Cloud synchronisiert':currentLang==='ru'?'Синхронизировано':'Bulut ile senkronize');
+            $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Cloud synced':currentLang==='de'?'Cloud synchronisiert':currentLang==='ru'?'Синхронизировано':currentLang==='zh'?'云同步已完成':'Bulut ile senkronize');
         } else {
             $('syncStatus').textContent = '⚠️ ' + (currentLang==='en'?'Cloud file empty':'Bulut dosyası boş');
         }
@@ -350,7 +350,7 @@ async function loadFromCloud(){
 }
 
 async function saveToCloud(){
-    $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':'Kaydediliyor...');
+    $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':currentLang==='de'?'Speichern...':currentLang==='ru'?'Сохранение...':currentLang==='zh'?'保存中...':'Kaydediliyor...');
     try {
         const checkRes = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`, {
             headers: { 'Authorization': `token ${GH_TOKEN}` }
@@ -376,7 +376,7 @@ async function saveToCloud(){
         if(res.ok){
             const json = await res.json();
             fileSha = json.content.sha;
-            $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Saved to cloud':'Değişiklikler buluta kaydedildi');
+            $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Saved to cloud':currentLang==='de'?'In Cloud gespeichert':currentLang==='ru'?'Сохранено в облако':currentLang==='zh'?'已保存到云端':'Değişiklikler buluta kaydedildi');
         } else {
             $('syncStatus').textContent = '❌ ' + (currentLang==='en'?'Save error':'Kaydetme hatası');
         }
@@ -390,8 +390,8 @@ async function saveToCloud(){
 $('searchCoverBtn').onclick = async () => {
     const title = $('title').value.trim();
     const author = $('author').value.trim();
-    if(!title){ alert(currentLang==='en'?'Please enter a book title first.':'Önce kitap adını yazmalısın.'); return; }
-    $('coverHint').textContent = currentLang==='en'?'Searching cover online...':'İnternette kapak aranıyor...';
+    if(!title){ alert(currentLang==='en'?'Please enter a book title first.':currentLang==='de'?'Bitte zuerst Buchtitel eingeben.':currentLang==='ru'?'Сначала введите название книги.':currentLang==='zh'?'请先输入书名。':'Önce kitap adını yazmalısın.'); return; }
+    $('coverHint').textContent = currentLang==='en'?'Searching cover online...':currentLang==='de'?'Suche Cover online...':currentLang==='ru'?'Поиск обложки...':currentLang==='zh'?'正在网上搜索封面...':'İnternette kapak aranıyor...';
     try {
         const q = encodeURIComponent(`${title} ${author}`);
         const res = await fetch(`https://openlibrary.org/search.json?q=${q}`);
@@ -399,17 +399,18 @@ $('searchCoverBtn').onclick = async () => {
         if(data.docs && data.docs.length > 0 && data.docs[0].cover_i){
             const doc = data.docs[0];
             const coverUrl = `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`;
-            if(confirm(`Kitap: "${doc.title}"\n\nBu kapağın eklenmesini onaylıyor musun?`)){
+            const confirmMsg = currentLang==='en'?`Book: "${doc.title}"\n\nDo you confirm adding this cover?`:currentLang==='de'?`Buch: "${doc.title}"\n\nMöchten Sie dieses Cover hinzufügen?`:currentLang==='ru'?`Книга: "${doc.title}"\n\nПодтверждаете добавление этой обложки?`:currentLang==='zh'?`书名: "${doc.title}"\n\n您确定要添加此封面吗？`:`Kitap: "${doc.title}"\n\nBu kapağın eklenmesini onaylıyor musun?`;
+            if(confirm(confirmMsg)){
                 const imgRes = await fetch(coverUrl);
                 const blob = await imgRes.blob();
                 const reader = new FileReader();
                 reader.onload = () => {
                     coverData = reader.result;
-                    $('coverHint').textContent = '✔ ' + (currentLang==='en'?'Cover added!':'İnternetten kapak başarıyla eklendi!');
+                    $('coverHint').textContent = '✔ ' + (currentLang==='en'?'Cover added!':currentLang==='de'?'Cover hinzugefügt!':currentLang==='ru'?'Обложка добавлена!':currentLang==='zh'?'封面已添加！':'İnternetten kapak başarıyla eklendi!');
                 };
                 reader.readAsDataURL(blob);
             } else {
-                $('coverHint').textContent = currentLang==='en'?'Cancelled':'İptal edildi.';
+                $('coverHint').textContent = currentLang==='en'?'Cancelled':currentLang==='de'?'Abgebrochen':currentLang==='ru'?'Отменено':currentLang==='zh'?'已取消':'İptal edildi.';
             }
         } else {
             alert(t('msgNoCover'));
@@ -443,7 +444,7 @@ $('cover').onchange = e => {
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             coverData = canvas.toDataURL('image/jpeg', 0.75);
-            $('coverHint').textContent = '✔ ' + (currentLang==='en'?'Cover optimized.':'Kapak fotoğrafı optimize edildi ve hazır.');
+            $('coverHint').textContent = '✔ ' + (currentLang==='en'?'Cover optimized.':currentLang==='de'?'Cover optimiert.':currentLang==='ru'?'Обложка оптимизирована.':currentLang==='zh'?'封面已优化。':'Kapak fotoğrafı optimize edildi ve hazır.');
         };
         img.src = event.target.result;
     };
@@ -495,7 +496,7 @@ function editBook(id){
     $('rating').value = String(b.rating || 0);
     $('notes').value = b.notes || '';
     $('cover').value = '';
-    $('coverHint').textContent = b.cover ? (currentLang==='en'?'Existing cover kept.':'Mevcut kapak korunacak.') : t('hintCover');
+    $('coverHint').textContent = b.cover ? (currentLang==='en'?'Existing cover kept.':currentLang==='de'?'Bestehendes Cover beibehalten.':currentLang==='ru'?'Существующая обложка сохранена.':currentLang==='zh'?'保留现有封面。':'Mevcut kapak korunacak.') : t('hintCover');
     $('formTitle').textContent = t('formEdit');
     $('saveBtn').textContent = t('btnUpdate');
     $('cancelWrap').classList.remove('hidden');
@@ -504,7 +505,8 @@ function editBook(id){
 
 function deleteBook(id){
     const b = books.find(x => x.id === id);
-    if(b && confirm(`“${b.title}” ${t('msgDelete')}`)){
+    const delConfirm = currentLang==='en'?`Do you want to delete "${b.title}"?`:currentLang==='de'?`Möchten Sie "${b.title}" löschen?`:currentLang==='ru'?`Вы хотите удалить "${b.title}"?`:currentLang==='zh'?`您确定要删除 "${b.title}" 吗？`:`“${b.title}” ${t('msgDelete')}`;
+    if(b && confirm(delConfirm)){
         books = books.filter(x => x.id !== id);
         if(editing === id) resetForm();
         saveToCloud();
@@ -532,7 +534,9 @@ function render(){
           f = $('filter').value,
           list = books.filter(b => (f === 'all' || b.status === f) && (`${b.title} ${b.author}`.toLocaleLowerCase('tr-TR').includes(q)))
                       .sort((a,b) => Number(b.year) - Number(a.year) || String(b.id).localeCompare(String(b.id)));
-    $('totalCount').textContent = books.length + ` ${currentLang==='en'?'books':currentLang==='de'?'Bücher':'kitap'}`;
+    
+    const booksWord = currentLang==='en'?'books':currentLang==='de'?'Bücher':currentLang==='ru'?'книг':currentLang==='zh'?'本书':'kitap';
+    $('totalCount').textContent = books.length + ' ' + booksWord;
     renderStats();
     if(!list.length){
         $('books').innerHTML = '<div class="empty">' + (books.length ? t('emptySearch') : t('emptyList')) + '</div>';
@@ -540,8 +544,10 @@ function render(){
     }
     const txtRead = currentLang==='en'?'Read':currentLang==='de'?'Gelesen':currentLang==='ru'?'Прочитано':currentLang==='zh'?'已读':'Okudum';
     const txtCurrent = currentLang==='en'?'Reading':currentLang==='de'?'Lese':currentLang==='ru'?'Читаю':currentLang==='zh'?'在读':'Devam ediyorum';
+    const txtEdit = currentLang==='en'?'Edit':currentLang==='de'?'Bearbeiten':currentLang==='ru'?'Изм.':currentLang==='zh'?'编辑':'Düzenle';
+    const txtDelete = currentLang==='en'?'Delete':currentLang==='de'?'Löschen':currentLang==='ru'?'Уд.':currentLang==='zh'?'删除':'Sil';
     
-    $('books').innerHTML = list.map(b => `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(b.month)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${b.notes ? `<div class="note">${esc(b.notes)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook('${b.id}')">${currentLang==='en'?'Edit':currentLang==='de'?'Bearbeiten':currentLang==='ru'?'Изм.':currentLang==='zh'?'编辑':'Düzenle'}</button></label><button class="danger" onclick="deleteBook('${b.id}')">${currentLang==='en'?'Delete':currentLang==='de'?'Löschen':currentLang==='ru'?'Уд.':currentLang==='zh'?'删除':'Sil'}</button></div></div></article>`).join('');
+    $('books').innerHTML = list.map(b => `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(b.month)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${b.notes ? `<div class="note">${esc(b.notes)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook('${b.id}')">${txtEdit}</button></label><button class="danger" onclick="deleteBook('${b.id}')">${txtDelete}</button></div></div></article>`).join('');
 }
 
 $('search').oninput = render;
