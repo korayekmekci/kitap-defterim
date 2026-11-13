@@ -72,7 +72,7 @@
 const GH_USER = 'korayekmekci';
 const GH_REPO = 'kitap-defterim';
 const GH_FILE = 'kitaplar.json';
-const GH_TOKEN = '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';
+const GH_TOKEN = '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'; // Token'ınızı buraya yazın
 
 let books = [], editing = null, fileSha = null, coverData = null;
 let currentLang = localStorage.getItem('kitapDefterim_lang') || 'tr';
@@ -343,13 +343,20 @@ async function loadFromCloud(){
             $('syncStatus').textContent = '⚠️ ' + (currentLang==='en'?'Cloud file empty':'Bulut dosyası boş');
         }
     } catch(e) {
-        $('syncStatus').textContent = '⚠️ ' + (currentLang==='en'?'Network error':'Bağlantı hatası');
+        // EMNİYET KEMERİ: İnternet/bulut yüklenemezse yerel hafızaya geç ve asla kilitlenme!
+        try {
+            books = JSON.parse(localStorage.getItem('kitapDefterim_v1') || '[]');
+        } catch(err){ books = []; }
+        $('syncStatus').textContent = '⚠️ ' + (currentLang==='en'?'Offline mode (Local storage)':'Çevrimdışı mod (Yerel liste)');
     }
     initYears();
     render();
 }
 
 async function saveToCloud(){
+    // Önce yerel hafızaya kaydedelim ki anında tepki versin
+    try { localStorage.setItem('kitapDefterim_v1', JSON.stringify(books)); } catch(e){}
+
     $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':currentLang==='de'?'Speichern...':currentLang==='ru'?'Сохранение...':currentLang==='zh'?'保存中...':'Kaydediliyor...');
     try {
         const checkRes = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`, {
@@ -381,7 +388,7 @@ async function saveToCloud(){
             $('syncStatus').textContent = '❌ ' + (currentLang==='en'?'Save error':'Kaydetme hatası');
         }
     } catch(e) {
-        $('syncStatus').textContent = '❌ ' + (currentLang==='en'?'Cloud connection error':'Buluta bağlanılamadı');
+        $('syncStatus').textContent = '⚠️ ' + (currentLang==='en'?'Saved locally (Cloud offline)':'Yerelde saklandı (Bulut çevrimdışı)');
     }
     initYears();
     render();
@@ -452,7 +459,7 @@ $('cover').onchange = e => {
 };
 
 function resetForm(){
-    editing = null; coverData = null; $('bookForm'].reset();
+    editing = null; coverData = null; $('bookForm').reset();
     $('year').value = new Date().getFullYear();
     const curMonths = monthsMap[currentLang] || monthsMap['tr'];
     $('month').value = curMonths[new Date().getMonth()];
