@@ -21,10 +21,9 @@ $('month').value = months[new Date().getMonth()];
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-// GitHub Pages üzerinden doğrudan okuma (Hatasız ve Hızlı)
 async function loadFromCloud(){
     try {
-        const timestamp = new Date().getTime(); // Önbelleğe takılmasın diye
+        const timestamp = new Date().getTime();
         const res = await fetch(`https://${GH_USER}.github.io/${GH_REPO}/${GH_FILE}?t=${timestamp}`);
         if(res.ok){
             const json = await res.json();
@@ -40,7 +39,6 @@ async function loadFromCloud(){
     render();
 }
 
-// GitHub'a Verileri Kaydetme
 async function saveToCloud(){
     $('syncStatus').textContent = '🔄 Buluta kaydediliyor...';
     try {
@@ -114,13 +112,34 @@ $('searchCoverBtn').onclick = async () => {
     }
 };
 
+// Cihazdan Seçilen Kapakları Otomatik Küçültme ve Sıkıştırma (Kalıcı Çözüm)
 $('cover').onchange = e => {
     const f = e.target.files[0];
     if(!f){ coverData = null; return; }
-    if(f.size > 1200000){ alert('Fotoğraf 1,2 MB sınırını aşıyor.'); e.target.value=''; coverData=null; return; }
-    const r = new FileReader();
-    r.onload = () => { coverData = r.result; $('coverHint').textContent = 'Fotoğraf seçildi.'; };
-    r.readAsDataURL(f);
+    const reader = new FileReader();
+    reader.onload = event => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 300;
+            const MAX_HEIGHT = 450;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            coverData = canvas.toDataURL('image/jpeg', 0.75); // %75 kalite ile ideal boyuta sıkıştır
+            $('coverHint').textContent = '✔ Kapak fotoğrafı optimize edildi ve hazır.';
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(f);
 };
 
 function resetForm(){
@@ -200,7 +219,7 @@ function renderStats(){
 function render(){
     const q = $('search').value.toLocaleLowerCase('tr-TR'),
           f = $('filter').value,
-          list = books.filter(b => (f === 'all' || b.status === f) && (`${b.title} ${b.author}`.toLocaleLowerCase('tr-TR'.toLocaleLowerCase('tr-TR')).includes(q)))
+          list = books.filter(b => (f === 'all' || b.status === f) && (`${b.title} ${b.author}`.toLocaleLowerCase('tr-TR').includes(q)))
                       .sort((a,b) => Number(b.year) - Number(a.year) || months.indexOf(b.month) - months.indexOf(a.month) || String(b.id).localeCompare(String(b.id)));
     $('totalCount').textContent = books.length + ' kitap';
     renderStats();
