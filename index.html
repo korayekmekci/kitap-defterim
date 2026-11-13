@@ -72,7 +72,7 @@
 const GH_USER = 'korayekmekci';
 const GH_REPO = 'kitap-defterim';
 const GH_FILE = 'kitaplar.json';
-const GH_TOKEN = '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'; // Token'ınızı buraya yazın
+const GH_TOKEN = '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';
 
 let books = [], editing = null, fileSha = null, coverData = null;
 let currentLang = localStorage.getItem('kitapDefterim_lang') || 'tr';
@@ -280,18 +280,56 @@ const dict = {
         msgNoCover: "未在网上找到合适的封面。",
         msgErr: "网络连接出错。",
         msgDelete: "您确定要删除这本书吗？",
-        emptySearch: "未找到符合的书籍。",
+        emptySearch: "未找到符合的书籍.",
         emptyList: "尚未添加书籍。"
     }
 };
 
-const monthsMap = {
+// Çoklu dil destekli aylar ve durum çeviri sözlüğü
+const monthsData = {
     tr: ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'],
     en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
     de: ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
     ru: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
     zh: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月']
 };
+
+// Türkçe ay isimlerini seçilen dile çeviren akıllı harita
+const monthTranslateMap = {
+    'Ocak': {en:'January', de:'Januar', ru:'Январь', zh:'一月'},
+    'Şubat': {en:'February', de:'Februar', ru:'Февраль', zh:'二月'},
+    'Mart': {en:'March', de:'März', ru:'Март', zh:'三月'},
+    'Nisan': {en:'April', de:'April', ru:'Апрель', zh:'四月'},
+    'Mayıs': {en:'May', de:'Mai', ru:'Май', zh:'五月'},
+    'Haziran': {en:'June', de:'Juni', ru:'Июнь', zh:'六月'},
+    'Temmuz': {en:'July', de:'Juli', ru:'Июль', zh:'七月'},
+    'Ağustos': {en:'August', de:'August', ru:'Август', zh:'八月'},
+    'Eylül': {en:'September', de:'September', ru:'Сентябрь', zh:'九月'},
+    'Ekim': {en:'October', de:'Oktober', ru:'Октябрь', zh:'十月'},
+    'Kasım': {en:'November', de:'November', ru:'Ноябрь', zh:'十一月'},
+    'Aralık': {en:'December', de:'Dezember', ru:'Декабрь', zh:'十二月'}
+};
+
+function translateMonth(mName, lang){
+    if(lang === 'tr') return mName;
+    if(monthTranslateMap[mName] && monthTranslateMap[mName][lang]){
+        return monthTranslateMap[mName][lang];
+    }
+    return mName;
+}
+
+// Standart notları çeviren sözlük (Örn: "Halen okunuyor.", "Okundu.")
+function translateNote(noteText, lang){
+    if(!noteText) return '';
+    const text = noteText.trim();
+    if(text === 'Halen okunuyor.' || text === 'Halen okunuyor'){
+        return {en:'Currently reading.', de:'Lese gerade.', ru:'Читаю сейчас.', zh:'正在阅读。'}[lang] || text;
+    }
+    if(text === 'Okundu.' || text === 'Okundu'){
+        return {en:'Read.', de:'Gelesen.', ru:'Прочитано.', zh:'已读。'}[lang] || text;
+    }
+    return text;
+}
 
 const $ = id => document.getElementById(id);
 $('langSelect').value = currentLang;
@@ -314,7 +352,7 @@ function updateTexts(){
 function updateMonthDropdown(){
     const mSelect = $('month');
     const curVal = mSelect.value;
-    const mList = monthsMap[currentLang] || monthsMap['tr'];
+    const mList = monthsData[currentLang] || monthsData['tr'];
     mSelect.innerHTML = `<option value="" data-i18n="optMonth">${t('optMonth')}</option>` + mList.map(m => `<option value="${m}">${m}</option>`).join('');
     mSelect.value = curVal;
 }
@@ -326,7 +364,7 @@ $('langSelect').onchange = e => {
 };
 
 $('year').value = new Date().getFullYear();
-const initialMonths = monthsMap[currentLang] || monthsMap['tr'];
+const initialMonths = monthsData[currentLang] || monthsData['tr'];
 $('month').value = initialMonths[new Date().getMonth()];
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -343,7 +381,6 @@ async function loadFromCloud(){
             $('syncStatus').textContent = '⚠️ ' + (currentLang==='en'?'Cloud file empty':'Bulut dosyası boş');
         }
     } catch(e) {
-        // EMNİYET KEMERİ: İnternet/bulut yüklenemezse yerel hafızaya geç ve asla kilitlenme!
         try {
             books = JSON.parse(localStorage.getItem('kitapDefterim_v1') || '[]');
         } catch(err){ books = []; }
@@ -354,7 +391,6 @@ async function loadFromCloud(){
 }
 
 async function saveToCloud(){
-    // Önce yerel hafızaya kaydedelim ki anında tepki versin
     try { localStorage.setItem('kitapDefterim_v1', JSON.stringify(books)); } catch(e){}
 
     $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':currentLang==='de'?'Speichern...':currentLang==='ru'?'Сохранение...':currentLang==='zh'?'保存中...':'Kaydediliyor...');
@@ -459,9 +495,9 @@ $('cover').onchange = e => {
 };
 
 function resetForm(){
-    editing = null; coverData = null; $('bookForm').reset();
+    editing = null; coverData = null; $('bookForm'].reset();
     $('year').value = new Date().getFullYear();
-    const curMonths = monthsMap[currentLang] || monthsMap['tr'];
+    const curMonths = monthsData[currentLang] || monthsData['tr'];
     $('month').value = curMonths[new Date().getMonth()];
     $('formTitle').textContent = t('formAdd');
     $('saveBtn').textContent = t('btnSave');
@@ -530,7 +566,7 @@ function renderStats(){
     $('selectedYearTotal').textContent = yearly.length;
     $('monthlyAverage').textContent = (yearly.length / 12).toFixed(1);
     
-    const curMonths = monthsMap[currentLang] || monthsMap['tr'];
+    const curMonths = monthsData[currentLang] || monthsData['tr'];
     const vals = curMonths.map(m => yearly.filter(b => b.month === m).length),
           max = Math.max(1, ...vals);
     $('monthChart').innerHTML = curMonths.map((m,i) => `<div class="chartrow"><span>${m.slice(0,3)}</span><div class="track"><div class="bar" style="width:${vals[i]/max*100}%"></div></div><b>${vals[i]}</b></div>`).join('');
@@ -554,7 +590,11 @@ function render(){
     const txtEdit = currentLang==='en'?'Edit':currentLang==='de'?'Bearbeiten':currentLang==='ru'?'Изм.':currentLang==='zh'?'编辑':'Düzenle';
     const txtDelete = currentLang==='en'?'Delete':currentLang==='de'?'Löschen':currentLang==='ru'?'Уд.':currentLang==='zh'?'删除':'Sil';
     
-    $('books').innerHTML = list.map(b => `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(b.month)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${b.notes ? `<div class="note">${esc(b.notes)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook('${b.id}')">${txtEdit}</button></label><button class="danger" onclick="deleteBook('${b.id}')">${txtDelete}</button></div></div></article>`).join('');
+    $('books').innerHTML = list.map(b => {
+        const translatedMonth = translateMonth(b.month, currentLang);
+        const translatedNote = translateNote(b.notes, currentLang);
+        return `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook('${b.id}')">${txtEdit}</button></label><button class="danger" onclick="deleteBook('${b.id}')">${txtDelete}</button></div></div></article>`;
+    }).join('');
 }
 
 $('search').oninput = render;
