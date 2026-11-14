@@ -324,7 +324,6 @@ function translateNote(noteText, lang){
 }
 
 const $ = id => document.getElementById(id);
-$('langSelect').value = currentLang;
 
 function t(key){
     return (dict[currentLang] && dict[currentLang][key]) || dict['tr'][key] || key;
@@ -349,7 +348,9 @@ function updateMonthDropdown(){
     mSelect.value = curVal;
 }
 
-$('langSelect').onchange = e => {
+// Dil seçimi event dinleyicisi garanti altına alındı
+$('langSelect').value = currentLang;
+$('langSelect').onchange = (e) => {
     currentLang = e.target.value;
     localStorage.setItem('kitapDefterim_lang', currentLang);
     updateTexts();
@@ -360,6 +361,8 @@ const initialMonths = monthsData[currentLang] || monthsData['tr'];
 $('month').value = initialMonths[new Date().getMonth()];
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+let books = [], editing = null, coverData = null;
 
 function loadBooks(){
     try {
@@ -441,7 +444,7 @@ $('cover').onchange = e => {
 };
 
 function resetForm(){
-    editing = null; coverData = null; $('bookForm'].reset();
+    editing = null; coverData = null; $('bookForm').reset();
     $('year').value = new Date().getFullYear();
     const curMonths = monthsData[currentLang] || monthsData['tr'];
     $('month').value = curMonths[new Date().getMonth()];
@@ -515,7 +518,7 @@ function renderStats(){
     const curMonths = monthsData[currentLang] || monthsData['tr'];
     const vals = curMonths.map(m => yearly.filter(b => b.month === m).length),
           max = Math.max(1, ...vals);
-    $('monthChart').innerHTML = curMonths.map((m,i) => `<div class="chartrow"><span>${m.slice(0,3)}</span><div class="track"><div class="bar" style="width:${vals[i]/max*100}%"></div></div><b>${vals[i]}</b></div>`).join('');
+    $('monthChart').innerHTML = curMonths.map((m,i) => `<div class="chartrow"><span>${m.slice(0,3)}</span><div class="chart-track" style="display:contents"><div class="track" style="width:100%"><div class="bar" style="width:${vals[i]/max*100}%"></div></div></div><b>${vals[i]}</b></div>`).join('');
 }
 
 function render(){
