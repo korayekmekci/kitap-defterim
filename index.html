@@ -75,7 +75,6 @@
 const SUPABASE_URL = 'https://dzkwvcaoidnjuxrojdhz.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ERae92DVLQT8rCwJzqqKkg_Pq_56W5y';
 
-// Çakışmayı önlemek için değişken adını db yaptık
 let db = null;
 try {
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -286,3 +285,348 @@ const dict = {
         filterRead: "已读",
         filterCurrent: "在读",
         footerText: "Ekmekci Systems · Supabase 云数据库已激活。",
+        msgNoCover: "未在网上找到合适的封面。",
+        msgErr: "网络连接出错。",
+        msgDelete: "您确定要删除这本书吗？",
+        emptySearch: "未找到符合的书籍。",
+        emptyList: "尚未添加书籍。"
+    }
+};
+
+const monthsData = {
+    tr: ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'],
+    en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    de: ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
+    ru: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
+    zh: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月']
+};
+
+const monthTranslateMap = {
+    'Ocak': {en:'January', de:'Januar', ru:'Январь', zh:'一月'},
+    'Şubat': {en:'February', de:'Februar', ru:'Февраль', zh:'二月'},
+    'Mart': {en:'March', de:'März', ru:'Март', zh:'三月'},
+    'Nisan': {en:'April', de:'April', ru:'Апрель', zh:'四月'},
+    'Mayıs': {en:'May', de:'Mai', ru:'Май', zh:'五月'},
+    'Haziran': {en:'June', de:'Juni', ru:'Июнь', zh:'六月'},
+    'Temmuz': {en:'July', de:'Juli', ru:'Июль', zh:'七月'},
+    'Ağustos': {en:'August', de:'August', ru:'Август', zh:'八月'},
+    'Eylül': {en:'September', de:'September', ru:'Сентябрь', zh:'九月'},
+    'Ekim': {en:'October', de:'Oktober', ru:'Октябрь', zh:'十月'},
+    'Kasım': {en:'November', de:'November', ru:'Ноябрь', zh:'十一月'},
+    'Aralık': {en:'December', de:'Dezember', ru:'Декабрь', zh:'十二月'}
+};
+
+function translateMonth(mName, lang){
+    if(lang === 'tr') return mName;
+    if(monthTranslateMap[mName] && monthTranslateMap[mName][lang]){
+        return monthTranslateMap[mName][lang];
+    }
+    return mName;
+}
+
+function translateNote(noteText, lang){
+    if(!noteText) return '';
+    const text = noteText.trim();
+    if(text === 'Halen okunuyor.' || text === 'Halen okunuyor'){
+        return {en:'Currently reading.', de:'Lese gerade.', ru:'Читаю сейчас.', zh:'正在阅读。'}[lang] || text;
+    }
+    if(text === 'Okundu.' || text === 'Okundu'){
+        return {en:'Read.', de:'Gelesen.', ru:'Прочитано.', zh:'已读。'}[lang] || text;
+    }
+    return text;
+}
+
+const $ = id => document.getElementById(id);
+$('langSelect').value = currentLang;
+
+function t(key){
+    return (dict[currentLang] && dict[currentLang][key]) || dict['tr'][key] || key;
+}
+
+function updateTexts(){
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        el.textContent = t(k);
+    });
+    $('search').placeholder = t('searchPlaceholder');
+    updateMonthDropdown();
+    render();
+    renderStats();
+}
+
+function updateMonthDropdown(){
+    const mSelect = $('month');
+    const curVal = mSelect.value;
+    const mList = monthsData[currentLang] || monthsData['tr'];
+    mSelect.innerHTML = `<option value="" data-i18n="optMonth">${t('optMonth')}</option>` + mList.map(m => `<option value="${m}">${m}</option>`).join('');
+    mSelect.value = curVal;
+}
+
+$('langSelect').onchange = e => {
+    currentLang = e.target.value;
+    localStorage.setItem('kitapDefterim_lang', currentLang);
+    updateTexts();
+};
+
+$('year').value = new Date().getFullYear();
+const initialMonths = monthsData[currentLang] || monthsData['tr'];
+$('month').value = initialMonths[new Date().getMonth()];
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+// --- HİBRİT VERİ ÇEKME (SUPABASE + YEREL EMNİYET KEMERİ) ---
+async function loadFromCloud(){
+    if(!db){
+        loadFromLocalStorage();
+        return;
+    }
+    try {
+        // Supabase'den veri çekme isteği ve 3 saniye zaman aşımı
+        const fetchPromise = db.from('books').select('*').order('id', { ascending: false });
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Zaman aşımı')), 3000));
+        
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+        
+        if(error) throw error;
+        books = data || [];
+        // Verileri yedek olması için yerel hafızaya da kaydedelim
+        try { localStorage.setItem('kitapDefterim_v1', JSON.stringify(books)); } catch(e){}
+        
+        $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Supabase connected':currentLang==='de'?'Supabase verbunden':currentLang==='ru'?'Supabase подключен':currentLang==='zh'?'Supabase 已连接':'Supabase ile senkronize');
+    } catch(e) {
+        console.warn("Supabase'e ulaşılamadı, yerel hafızaya geçiliyor:", e);
+        loadFromLocalStorage();
+    }
+    initYears();
+    render();
+}
+
+function loadFromLocalStorage(){
+    try {
+        books = JSON.parse(localStorage.getItem('kitapDefterim_v1') || '[]');
+    } catch(err){ books = []; }
+    $('syncStatus').textContent = '⚠️ ' + (currentLang==='en'?'Offline / Local mode':'Çevrimdışı / Yerel mod');
+    initYears();
+    render();
+}
+
+async function saveToCloud(item){
+    // Önce yerel hafızaya anında yazalım ki arayüz donmasın
+    try {
+        if(editing){
+            books = books.map(b => b.id === editing ? {...b, ...item} : b);
+        } else {
+            const newItem = { id: Date.now(), ...item };
+            books.unshift(newItem);
+        }
+        localStorage.setItem('kitapDefterim_v1', JSON.stringify(books));
+    } catch(e){}
+
+    $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':'Kaydediliyor...');
+    
+    if(db) {
+        try {
+            if(editing){
+                const { error } = await db.from('books').update(item).eq('id', editing);
+                if(error) throw error;
+            } else {
+                const { error } = await db.from('books').insert([item]);
+                if(error) throw error;
+            }
+            $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Saved to cloud':'Supabase buluta kaydedildi');
+        } catch(e) {
+            console.error("Buluta yazma hatası:", e);
+            $('syncStatus').textContent = '⚠️ Yerelde saklandı (Bulut hatası)';
+        }
+    } else {
+        $('syncStatus').textContent = '⚠️ Yerel hafızaya kaydedildi';
+    }
+    loadFromCloud();
+}
+
+async function deleteBook(id){
+    const b = books.find(x => x.id === id);
+    const delConfirm = currentLang==='en'?`Do you want to delete "${b.title}"?`:`“${b.title}” silinsin mi?`;
+    if(b && confirm(delConfirm)){
+        // Önce yerelden silelim
+        books = books.filter(x => x.id !== id);
+        try { localStorage.setItem('kitapDefterim_v1', JSON.stringify(books)); } catch(e){}
+        
+        if(db){
+            try {
+                const { error } = await db.from('books').delete().eq('id', id);
+                if(error) throw error;
+            } catch(e) {
+                console.error("Buluttan silme hatası:", e);
+            }
+        }
+        if(editing === id) resetForm();
+        loadFromCloud();
+    }
+}
+
+$('searchCoverBtn').onclick = async () => {
+    const title = $('title').value.trim();
+    const author = $('author').value.trim();
+    if(!title){ alert(currentLang==='en'?'Please enter a book title first.':'Önce kitap adını yazmalısın.'); return; }
+    $('coverHint').textContent = currentLang==='en'?'Searching cover online...':'İnternette kapak aranıyor...';
+    try {
+        const q = encodeURIComponent(`${title} ${author}`);
+        const res = await fetch(`https://openlibrary.org/search.json?q=${q}`);
+        const data = await res.json();
+        if(data.docs && data.docs.length > 0 && data.docs[0].cover_i){
+            const doc = data.docs[0];
+            const coverUrl = `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`;
+            if(confirm(`Kitap: "${doc.title}"\n\nBu kapağın eklenmesini onaylıyor musun?`)){
+                const imgRes = await fetch(coverUrl);
+                const blob = await imgRes.blob();
+                const reader = new FileReader();
+                reader.onload = () => {
+                    coverData = reader.result;
+                    $('coverHint').textContent = '✔ Kapak eklendi!';
+                };
+                reader.readAsDataURL(blob);
+            } else {
+                $('coverHint').textContent = 'İptal edildi.';
+            }
+        } else {
+            alert(t('msgNoCover'));
+            $('coverHint').textContent = t('msgNoCover');
+        }
+    } catch(err) {
+        alert(t('msgErr'));
+        $('coverHint').textContent = t('msgErr');
+    }
+};
+
+$('cover').onchange = e => {
+    const f = e.target.files[0];
+    if(!f){ coverData = null; return; }
+    const reader = new FileReader();
+    reader.onload = event => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 300;
+            const MAX_HEIGHT = 450;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            coverData = canvas.toDataURL('image/jpeg', 0.75);
+            $('coverHint').textContent = '✔ Kapak optimize edildi.';
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(f);
+};
+
+function resetForm(){
+    editing = null; coverData = null; $('bookForm'].reset();
+    $('year').value = new Date().getFullYear();
+    const curMonths = monthsData[currentLang] || monthsData['tr'];
+    $('month').value = curMonths[new Date().getMonth()];
+    $('formTitle').textContent = t('formAdd');
+    $('saveBtn').textContent = t('btnSave');
+    $('cancelWrap').classList.add('hidden');
+    $('coverHint').textContent = t('hintCover');
+}
+
+$('bookForm').onsubmit = e => {
+    e.preventDefault();
+    const old = books.find(b => b.id === editing);
+    const item = {
+        title: $('title').value.trim(),
+        author: $('author').value.trim(),
+        month: $('month').value,
+        year: Number($('year').value),
+        status: $('status').value,
+        rating: Number($('rating').value),
+        notes: $('notes').value.trim(),
+        cover: coverData || (old ? old.cover || '' : '')
+    };
+    saveToCloud(item);
+    resetForm();
+};
+
+$('cancelEdit').onclick = resetForm;
+
+function editBook(id){
+    const b = books.find(x => x.id === id);
+    if(!b) return;
+    editing = id; coverData = null;
+    $('title').value = b.title;
+    $('author').value = b.author;
+    $('month').value = b.month;
+    $('year').value = b.year;
+    $('status').value = b.status;
+    $('rating').value = String(b.rating || 0);
+    $('notes').value = b.notes || '';
+    $('cover').value = '';
+    $('coverHint').textContent = b.cover ? 'Mevcut kapak korunacak.' : t('hintCover');
+    $('formTitle').textContent = t('formEdit');
+    $('saveBtn').textContent = t('btnUpdate');
+    $('cancelWrap').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderStats(){
+    const yr = Number($('statsYear').value) || new Date().getFullYear(),
+          done = books.filter(b => b.status === 'read'),
+          yearly = done.filter(b => Number(b.year) === yr);
+    $('readCount').textContent = done.length;
+    $('currentCount').textContent = books.filter(b => b.status === 'current').length;
+    $('yearCount').textContent = done.filter(b => Number(b.year) === new Date().getFullYear()).length;
+    $('selectedYearTotal').textContent = yearly.length;
+    $('monthlyAverage').textContent = (yearly.length / 12).toFixed(1);
+    
+    const curMonths = monthsData[currentLang] || monthsData['tr'];
+    const vals = curMonths.map(m => yearly.filter(b => b.month === m).length),
+          max = Math.max(1, ...vals);
+    $('monthChart').innerHTML = curMonths.map((m,i) => `<div class="chartrow"><span>${m.slice(0,3)}</span><div class="track"><div class="bar" style="width:${vals[i]/max*100}%"></div></div><b>${vals[i]}</b></div>`).join('');
+}
+
+function render(){
+    const q = $('search').value.toLocaleLowerCase('tr-TR'),
+          f = $('filter').value,
+          list = books.filter(b => (f === 'all' || b.status === f) && (`${b.title} ${b.author}`.toLocaleLowerCase('tr-TR').includes(q)))
+                      .sort((a,b) => Number(b.year) - Number(a.year) || String(b.id).localeCompare(String(b.id)));
+    
+    const booksWord = currentLang==='en'?'books':'kitap';
+    $('totalCount').textContent = books.length + ' ' + booksWord;
+    renderStats();
+    if(!list.length){
+        $('books').innerHTML = '<div class="empty">' + (books.length ? t('emptySearch') : t('emptyList')) + '</div>';
+        return;
+    }
+    const txtRead = currentLang==='en'?'Read':'Okudum';
+    const txtCurrent = currentLang==='en'?'Reading':'Devam ediyorum';
+    const txtEdit = currentLang==='en'?'Edit':'Düzenle';
+    const txtDelete = currentLang==='en'?'Delete':'Sil';
+    
+    $('books').innerHTML = list.map(b => {
+        const translatedMonth = translateMonth(b.month, currentLang);
+        const translatedNote = translateNote(b.notes, currentLang);
+        return `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook('${b.id}')">${txtEdit}</button></label><button class="danger" onclick="deleteBook('${b.id}')">${txtDelete}</button></div></div></article>`;
+    }).join('');
+}
+
+$('search').oninput = render;
+$('filter').onchange = render;
+$('statsYear').onchange = renderStats;
+
+function initYears(){
+    const ys = [...new Set([new Date().getFullYear(), ...books.map(b => Number(b.year)).filter(y => y > 0)])].sort((a,b) => b - a);
+    $('statsYear').innerHTML = ys.map(y => `<option value="${y}">${y}</option>`).join('');
+}
+
+updateTexts();
+loadFromCloud();
+</script></body></html>
