@@ -1,5 +1,5 @@
 <!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#315b4c"><title>Kitap Defterim (Supabase Cloud)</title>
-<!-- Supabase Kütüphanesini Ekliyoruz -->
+<!-- Supabase Kütüphanesi -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#f4f2ec;--paper:#fffefa;--ink:#25332e;--muted:#78817b;--green:#315b4c;--line:#e7e3d9;--gold:#c49a52;--red:#a54b43}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui}main{max-width:740px;margin:auto;padding:18px 14px 40px}header{padding:12px 2px 20px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}.header-left{flex:1}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:700}h1{font:600 34px Georgia;margin:5px 0}.sub,.muted{color:var(--muted);font-size:12px}.lang-select{padding:6px 10px;border-radius:8px;border:1px solid #dcded6;background:white;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.stat,.panel,.book{background:var(--paper);border:1px solid var(--line);border-radius:15px}.stat{padding:11px}.stat strong{display:block;font-size:23px;color:var(--green)}.stat span{font-size:11px;color:var(--muted)}.panel{padding:15px;margin-bottom:14px}.panel h2{font-size:16px;margin:0 0 12px}label{display:block;font-size:12px;font-weight:700;color:#66716a;margin:10px 0 5px}input,select,textarea{width:100%;border:1px solid #dcded6;border-radius:10px;padding:11px;font:inherit;background:white;color:var(--ink);min-height:43px}textarea{min-height:70px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}button{border:0;border-radius:10px;padding:10px 13px;font:650 13px system-ui}.primary{background:var(--green);color:white;width:100%;margin-top:14px}.secondary{background:#e9eee9;color:var(--green)}.danger{background:#f7e9e6;color:var(--red)}.hidden{display:none!important}.small-actions,.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.section-title{display:flex;justify-content:space-between;align-items:center;margin:20px 2px 10px}.section-title h2{font:600 21px Georgia;margin:0}.toolbar{display:flex;gap:8px;margin:12px 0}.toolbar input{flex:1;min-width:0}.toolbar select{width:140px}.book{display:flex;gap:11px;padding:12px;margin-bottom:10px}.cover{width:68px;height:96px;flex:0 0 68px;border-radius:6px;object-fit:cover;background:#e9e6dc}.placeholder{display:grid;place-items:center;font-size:25px}.bookbody{flex:1;min-width:0}.book h3{font:600 18px Georgia;margin:0 0 3px;overflow-wrap:anywhere}.author{font-size:13px;color:#65716a}.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.tag{font-size:10px;padding:4px 8px;border-radius:20px;background:#edf1ec;color:var(--green);font-weight:700}.current{background:#f5eddb;color:#85642d}.rating{color:#a77a2f;letter-spacing:1px;margin-top:5px}.note{font-size:12px;color:#69736d;margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}.actions button{padding:6px 9px;font-size:11px}.empty{text-align:center;padding:25px 14px;color:var(--muted);background:var(--paper);border:1px dashed #d8d4c9;border-radius:14px}.yearline{display:flex;justify-content:space-between;align-items:center;gap:8px}.yearline select{width:105px}.chartrow{display:grid;grid-template-columns:48px 1fr 24px;gap:8px;align-items:center;margin:8px 0;font-size:12px}.track{height:9px;background:#eeece5;border-radius:20px;overflow:hidden}.bar{height:100%;background:var(--green);border-radius:20px}.footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px}#syncStatus{font-size:11px;color:var(--green);text-align:right;margin-top:5px;font-weight:600}
@@ -72,12 +72,15 @@
 <div id="books"></div>
 <section class="footer" data-i18n="footerText">Ekmekci Systems · Supabase Cloud Veritabanı Aktif.</section>
 </main><script>
-// --- SUPABASE BAĞLANTI BİLGİLERİ ---
 const SUPABASE_URL = 'https://dzkwvcaoidnjuxrojdhz.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ERae92DVLQT8rCwJzqqKkg_Pq_56W5y';
 
-// Supabase İstemcisini Başlatıyoruz (Güvenli Telefon Hattı)
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase = null;
+try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch(err) {
+    console.error("Supabase başlatılamadı:", err);
+}
 
 let books = [], editing = null, coverData = null;
 let currentLang = localStorage.getItem('kitapDefterim_lang') || 'tr';
@@ -136,3 +139,464 @@ const dict = {
         labelTitle: "Book title",
         labelAuthor: "Author name",
         btnSearchCover: "🌐 Find Cover Online & Confirm",
+        labelMonth: "Month read",
+        optMonth: "Select month",
+        labelYear: "Year",
+        labelStatus: "Status",
+        statusRead: "Read",
+        statusCurrent: "Currently reading",
+        labelRating: "My rating",
+        ratingNone: "No rating",
+        labelCover: "Book cover (select photo)",
+        hintCover: "Cover is optional. You can find online or select from device.",
+        labelNotes: "Personal notes / thoughts",
+        btnSave: "Save book",
+        btnUpdate: "Save changes",
+        btnCancel: "Cancel editing",
+        statsTitle: "Reading statistics",
+        statsSelected: "Read in selected year",
+        statsAvg: "Monthly average",
+        libraryTitle: "My Library",
+        searchPlaceholder: "Search book or author…",
+        filterAll: "All books",
+        filterRead: "Read",
+        filterCurrent: "Current",
+        footerText: "Ekmekci Systems · Supabase Cloud Database Active.",
+        msgNoCover: "No suitable cover found online for this book.",
+        msgErr: "An internet connection error occurred.",
+        msgDelete: "Do you want to delete this book?",
+        emptySearch: "No matching books found.",
+        emptyList: "No books added yet."
+    },
+    de: {
+        eyebrow: "Ekmekci Systems (Supabase Cloud)",
+        appTitle: "Mein Bücherbuch",
+        appSub: "Echtzeit synchronisierte intelligente Bibliothek.",
+        statRead: "Gelesene Bücher",
+        statCurrent: "Lese gerade",
+        statYear: "Dieses Jahr gelesen",
+        formAdd: "＋ Buch hinzufügen",
+        formEdit: "Buch bearbeiten",
+        labelTitle: "Buchtitel",
+        labelAuthor: "Autor",
+        btnSearchCover: "🌐 Online-Cover finden & bestätigen",
+        labelMonth: "Lesemonat",
+        optMonth: "Monat wählen",
+        labelYear: "Jahr",
+        labelStatus: "Status",
+        statusRead: "Gelesen",
+        statusCurrent: "Lese gerade",
+        labelRating: "Meine Bewertung",
+        ratingNone: "Keine Bewertung",
+        labelCover: "Buchcover (Foto wählen)",
+        hintCover: "Cover ist optional. Online suchen oder vom Gerät wählen.",
+        labelNotes: "Persönliche Notizen",
+        btnSave: "Buch speichern",
+        btnUpdate: "Änderungen speichern",
+        btnCancel: "Abbrechen",
+        statsTitle: "Lesestatistik",
+        statsSelected: "Im gewählten Jahr gelesen",
+        statsAvg: "Monatlicher Durchschnitt",
+        libraryTitle: "Meine Bibliothek",
+        searchPlaceholder: "Buch oder Autor suchen…",
+        filterAll: "Alle Bücher",
+        filterRead: "Gelesen",
+        filterCurrent: "Lese gerade",
+        footerText: "Ekmekci Systems · Supabase Cloud Datenbank Aktiv.",
+        msgNoCover: "Kein passendes Cover online gefunden.",
+        msgErr: "Ein Internetverbindungsfehler ist aufgetreten.",
+        msgDelete: "Möchten Sie dieses Buch löschen?",
+        emptySearch: "Keine passenden Bücher gefunden.",
+        emptyList: "Noch keine Bücher hinzugefügt."
+    },
+    ru: {
+        eyebrow: "Ekmekci Systems (Supabase Cloud)",
+        appTitle: "Мои Книги",
+        appSub: "Умная библиотека с синхронизацией в реальном времени.",
+        statRead: "Прочитано книг",
+        statCurrent: "Читаю сейчас",
+        statYear: "Прочитано в этом году",
+        formAdd: "＋ Добавить книгу",
+        formEdit: "Редактировать книгу",
+        labelTitle: "Название книги",
+        labelAuthor: "Автор",
+        btnSearchCover: "🌐 Найти обложку в сети",
+        labelMonth: "Месяц чтения",
+        optMonth: "Выберите месяц",
+        labelYear: "Год",
+        labelStatus: "Статус",
+        statusRead: "Прочитано",
+        statusCurrent: "Читаю",
+        labelRating: "Моя оценка",
+        ratingNone: "Без оценки",
+        labelCover: "Обложка книги (выбрать фото)",
+        hintCover: "Обложка необязательна. Можно найти в сети или с устройства.",
+        labelNotes: "Личные заметки",
+        btnSave: "Сохранить книгу",
+        btnUpdate: "Сохранить изменения",
+        btnCancel: "Отмена",
+        statsTitle: "Статистика чтения",
+        statsSelected: "Прочитано за выбранный год",
+        statsAvg: "В среднем за месяц",
+        libraryTitle: "Моя библиотека",
+        searchPlaceholder: "Поиск книги или автора…",
+        filterAll: "Все книги",
+        filterRead: "Прочитанные",
+        filterCurrent: "Читаемые",
+        footerText: "Ekmekci Systems · Облачная база данных Supabase активна.",
+        msgNoCover: "Подходящая обложка в сети не найдена.",
+        msgErr: "Ошибка подключения к интернету.",
+        msgDelete: "Вы хотите удалить эту книгу?",
+        emptySearch: "Книги не найдены.",
+        emptyList: "Книги пока не добавлены."
+    },
+    zh: {
+        eyebrow: "Ekmekci Systems (Supabase Cloud)",
+        appTitle: "我的书单",
+        appSub: "实时同步的智能图书馆。",
+        statRead: "已读书籍",
+        statCurrent: "正在阅读",
+        statYear: "今年已读",
+        formAdd: "＋ 添加书籍",
+        formEdit: "编辑书籍",
+        labelTitle: "书名",
+        labelAuthor: "作者",
+        btnSearchCover: "🌐 联网查找并确认封面",
+        labelMonth: "阅读月份",
+        optMonth: "选择月份",
+        labelYear: "年份",
+        labelStatus: "状态",
+        statusRead: "已读",
+        statusCurrent: "正在读",
+        labelRating: "我的评分",
+        ratingNone: "未评分",
+        labelCover: "书籍封面 (从设备选择)",
+        hintCover: "封面可选。可联网搜索或从设备选择。",
+        labelNotes: "个人笔记 / 想法",
+        btnSave: "保存书籍",
+        btnUpdate: "保存更改",
+        btnCancel: "取消编辑",
+        statsTitle: "阅读统计",
+        statsSelected: "所选年份已读",
+        statsAvg: "每月平均",
+        libraryTitle: "我的书库",
+        searchPlaceholder: "搜索书名或作者…",
+        filterAll: "全部书籍",
+        filterRead: "已读",
+        filterCurrent: "在读",
+        footerText: "Ekmekci Systems · Supabase 云数据库已激活。",
+        msgNoCover: "未在网上找到合适的封面。",
+        msgErr: "网络连接出错。",
+        msgDelete: "您确定要删除这本书吗？",
+        emptySearch: "未找到符合的书籍。",
+        emptyList: "尚未添加书籍。"
+    }
+};
+
+const monthsData = {
+    tr: ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'],
+    en: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    de: ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'],
+    ru: ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
+    zh: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月']
+};
+
+const monthTranslateMap = {
+    'Ocak': {en:'January', de:'Januar', ru:'Январь', zh:'一月'},
+    'Şubat': {en:'February', de:'Februar', ru:'Февраль', zh:'二月'},
+    'Mart': {en:'March', de:'März', ru:'Март', zh:'三月'},
+    'Nisan': {en:'April', de:'April', ru:'Апрель', zh:'四月'},
+    'Mayıs': {en:'May', de:'Mai', ru:'Май', zh:'五月'},
+    'Haziran': {en:'June', de:'Juni', ru:'Июнь', zh:'六月'},
+    'Temmuz': {en:'July', de:'Juli', ru:'Июль', zh:'七月'},
+    'Ağustos': {en:'August', de:'August', ru:'Август', zh:'八月'},
+    'Eylül': {en:'September', de:'September', ru:'Сентябрь', zh:'九月'},
+    'Ekim': {en:'October', de:'Oktober', ru:'Октябрь', zh:'十月'},
+    'Kasım': {en:'November', de:'November', ru:'Ноябрь', zh:'十一月'},
+    'Aralık': {en:'December', de:'Dezember', ru:'Декабрь', zh:'十二月'}
+};
+
+function translateMonth(mName, lang){
+    if(lang === 'tr') return mName;
+    if(monthTranslateMap[mName] && monthTranslateMap[mName][lang]){
+        return monthTranslateMap[mName][lang];
+    }
+    return mName;
+}
+
+function translateNote(noteText, lang){
+    if(!noteText) return '';
+    const text = noteText.trim();
+    if(text === 'Halen okunuyor.' || text === 'Halen okunuyor'){
+        return {en:'Currently reading.', de:'Lese gerade.', ru:'Читаю сейчас.', zh:'正在阅读。'}[lang] || text;
+    }
+    if(text === 'Okundu.' || text === 'Okundu'){
+        return {en:'Read.', de:'Gelesen.', ru:'Прочитано.', zh:'已读。'}[lang] || text;
+    }
+    return text;
+}
+
+const $ = id => document.getElementById(id);
+$('langSelect').value = currentLang;
+
+function t(key){
+    return (dict[currentLang] && dict[currentLang][key]) || dict['tr'][key] || key;
+}
+
+function updateTexts(){
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        el.textContent = t(k);
+    });
+    $('search').placeholder = t('searchPlaceholder');
+    updateMonthDropdown();
+    render();
+    renderStats();
+}
+
+function updateMonthDropdown(){
+    const mSelect = $('month');
+    const curVal = mSelect.value;
+    const mList = monthsData[currentLang] || monthsData['tr'];
+    mSelect.innerHTML = `<option value="" data-i18n="optMonth">${t('optMonth')}</option>` + mList.map(m => `<option value="${m}">${m}</option>`).join('');
+    mSelect.value = curVal;
+}
+
+$('langSelect').onchange = e => {
+    currentLang = e.target.value;
+    localStorage.setItem('kitapDefterim_lang', currentLang);
+    updateTexts();
+};
+
+$('year').value = new Date().getFullYear();
+const initialMonths = monthsData[currentLang] || monthsData['tr'];
+$('month').value = initialMonths[new Date().getMonth()];
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+// --- SUPABASE VERİ ÇEKME (READ) EMNİYET KEMERLİ ---
+async function loadFromCloud(){
+    if(!supabase){
+        $('syncStatus').textContent = '❌ Supabase başlatılamadı!';
+        return;
+    }
+    try {
+        // 3 saniye içinde yanıt gelmezse zaman aşımına uğratıyoruz
+        const fetchPromise = supabase.from('books').select('*').order('id', { ascending: false });
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Zaman aşımı')), 4000));
+        
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+        
+        if(error) throw error;
+        books = data || [];
+        $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Supabase connected':currentLang==='de'?'Supabase verbunden':currentLang==='ru'?'Supabase подключен':currentLang==='zh'?'Supabase 已连接':'Supabase ile senkronize');
+    } catch(e) {
+        console.error("Bağlantı detayı:", e);
+        // Hata durumunda yerel depolamaya geç ve asla takılı kalma
+        try { books = JSON.parse(localStorage.getItem('kitapDefterim_v1') || '[]'); } catch(err){ books = []; }
+        $('syncStatus').textContent = '⚠️ ' + (currentLang==='en'?'Offline / Local mode':'Çevrimdışı / Yerel mod');
+    }
+    initYears();
+    render();
+}
+
+async function saveToCloud(item){
+    try { localStorage.setItem('kitapDefterim_v1', JSON.stringify(books)); } catch(e){}
+
+    $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':'Kaydediliyor...');
+    try {
+        if(editing){
+            const { error } = await supabase.from('books').update(item).eq('id', editing);
+            if(error) throw error;
+        } else {
+            const { error } = await supabase.from('books').insert([item]);
+            if(error) throw error;
+        }
+        $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Saved to cloud':'Supabase buluta kaydedildi');
+    } catch(e) {
+        alert('Kaydetme hatası: ' + e.message);
+        $('syncStatus').textContent = '❌ Kaydetme hatası';
+    }
+    loadFromCloud();
+}
+
+async function deleteBook(id){
+    const b = books.find(x => x.id === id);
+    const delConfirm = currentLang==='en'?`Do you want to delete "${b.title}"?`:`“${b.title}” silinsin mi?`;
+    if(b && confirm(delConfirm)){
+        try {
+            const { error } = await supabase.from('books').delete().eq('id', id);
+            if(error) throw error;
+            if(editing === id) resetForm();
+            loadFromCloud();
+        } catch(e) {
+            alert('Silme hatası: ' + e.message);
+        }
+    }
+}
+
+$('searchCoverBtn').onclick = async () => {
+    const title = $('title').value.trim();
+    const author = $('author').value.trim();
+    if(!title){ alert(currentLang==='en'?'Please enter a book title first.':'Önce kitap adını yazmalısın.'); return; }
+    $('coverHint').textContent = currentLang==='en'?'Searching cover online...':'İnternette kapak aranıyor...';
+    try {
+        const q = encodeURIComponent(`${title} ${author}`);
+        const res = await fetch(`https://openlibrary.org/search.json?q=${q}`);
+        const data = await res.json();
+        if(data.docs && data.docs.length > 0 && data.docs[0].cover_i){
+            const doc = data.docs[0];
+            const coverUrl = `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`;
+            if(confirm(`Kitap: "${doc.title}"\n\nBu kapağın eklenmesini onaylıyor musun?`)){
+                const imgRes = await fetch(coverUrl);
+                const blob = await imgRes.blob();
+                const reader = new FileReader();
+                reader.onload = () => {
+                    coverData = reader.result;
+                    $('coverHint').textContent = '✔ Kapak eklendi!';
+                };
+                reader.readAsDataURL(blob);
+            } else {
+                $('coverHint').textContent = 'İptal edildi.';
+            }
+        } else {
+            alert(t('msgNoCover'));
+            $('coverHint').textContent = t('msgNoCover');
+        }
+    } catch(err) {
+        alert(t('msgErr'));
+        $('coverHint').textContent = t('msgErr');
+    }
+};
+
+$('cover').onchange = e => {
+    const f = e.target.files[0];
+    if(!f){ coverData = null; return; }
+    const reader = new FileReader();
+    reader.onload = event => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 300;
+            const MAX_HEIGHT = 450;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            coverData = canvas.toDataURL('image/jpeg', 0.75);
+            $('coverHint').textContent = '✔ Kapak optimize edildi.';
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(f);
+};
+
+function resetForm(){
+    editing = null; coverData = null; $('bookForm').reset();
+    $('year').value = new Date().getFullYear();
+    const curMonths = monthsData[currentLang] || monthsData['tr'];
+    $('month').value = curMonths[new Date().getMonth()];
+    $('formTitle').textContent = t('formAdd');
+    $('saveBtn').textContent = t('btnSave');
+    $('cancelWrap').classList.add('hidden');
+    $('coverHint').textContent = t('hintCover');
+}
+
+$('bookForm').onsubmit = e => {
+    e.preventDefault();
+    const old = books.find(b => b.id === editing);
+    const item = {
+        title: $('title').value.trim(),
+        author: $('author').value.trim(),
+        month: $('month').value,
+        year: Number($('year').value),
+        status: $('status').value,
+        rating: Number($('rating').value),
+        notes: $('notes').value.trim(),
+        cover: coverData || (old ? old.cover || '' : '')
+    };
+    saveToCloud(item);
+    resetForm();
+};
+
+$('cancelEdit').onclick = resetForm;
+
+function editBook(id){
+    const b = books.find(x => x.id === id);
+    if(!b) return;
+    editing = id; coverData = null;
+    $('title').value = b.title;
+    $('author').value = b.author;
+    $('month').value = b.month;
+    $('year').value = b.year;
+    $('status').value = b.status;
+    $('rating').value = String(b.rating || 0);
+    $('notes').value = b.notes || '';
+    $('cover').value = '';
+    $('coverHint').textContent = b.cover ? 'Mevcut kapak korunacak.' : t('hintCover');
+    $('formTitle').textContent = t('formEdit');
+    $('saveBtn').textContent = t('btnUpdate');
+    $('cancelWrap').classList.remove('hidden');
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderStats(){
+    const yr = Number($('statsYear').value) || new Date().getFullYear(),
+          done = books.filter(b => b.status === 'read'),
+          yearly = done.filter(b => Number(b.year) === yr);
+    $('readCount').textContent = done.length;
+    $('currentCount').textContent = books.filter(b => b.status === 'current').length;
+    $('yearCount').textContent = done.filter(b => Number(b.year) === new Date().getFullYear()).length;
+    $('selectedYearTotal').textContent = yearly.length;
+    $('monthlyAverage').textContent = (yearly.length / 12).toFixed(1);
+    
+    const curMonths = monthsData[currentLang] || monthsData['tr'];
+    const vals = curMonths.map(m => yearly.filter(b => b.month === m).length),
+          max = Math.max(1, ...vals);
+    $('monthChart').innerHTML = curMonths.map((m,i) => `<div class="chartrow"><span>${m.slice(0,3)}</span><div class="track"><div class="bar" style="width:${vals[i]/max*100}%"></div></div><b>${vals[i]}</b></div>`).join('');
+}
+
+function render(){
+    const q = $('search').value.toLocaleLowerCase('tr-TR'),
+          f = $('filter').value,
+          list = books.filter(b => (f === 'all' || b.status === f) && (`${b.title} ${b.author}`.toLocaleLowerCase('tr-TR').includes(q)))
+                      .sort((a,b) => Number(b.year) - Number(a.year) || String(b.id).localeCompare(String(b.id)));
+    
+    const booksWord = currentLang==='en'?'books':'kitap';
+    $('totalCount').textContent = books.length + ' ' + booksWord;
+    renderStats();
+    if(!list.length){
+        $('books').innerHTML = '<div class="empty">' + (books.length ? t('emptySearch') : t('emptyList')) + '</div>';
+        return;
+    }
+    const txtRead = currentLang==='en'?'Read':'Okudum';
+    const txtCurrent = currentLang==='en'?'Reading':'Devam ediyorum';
+    const txtEdit = currentLang==='en'?'Edit':'Düzenle';
+    const txtDelete = currentLang==='en'?'Delete':'Sil';
+    
+    $('books').innerHTML = list.map(b => {
+        const translatedMonth = translateMonth(b.month, currentLang);
+        const translatedNote = translateNote(b.notes, currentLang);
+        return `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook('${b.id}')">${txtEdit}</button></label><button class="danger" onclick="deleteBook('${b.id}')">${txtDelete}</button></div></div></article>`;
+    }).join('');
+}
+
+$('search').oninput = render;
+$('filter').onchange = render;
+$('statsYear').onchange = renderStats;
+
+function initYears(){
+    const ys = [...new Set([new Date().getFullYear(), ...books.map(b => Number(b.year)).filter(y => y > 0)])].sort((a,b) => b - a);
+    $('statsYear').innerHTML = ys.map(y => `<option value="${y}">${y}</option>`).join('');
+}
+
+updateTexts();
+loadFromCloud();
+</script></body></html>
