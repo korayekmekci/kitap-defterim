@@ -27,7 +27,7 @@
         .panel{padding:15px;margin-bottom:14px}
         .panel h2{font-size:16px;margin:0 0 12px}
         
-        /* --- OPTİMİZE EDİLMİŞ KOMPAKT İSTATİSTİK PANELİ --- */
+        /* KOMPAKT İSTATİSTİK PANELİ */
         .stats-compact {
             display: flex;
             justify-content: space-between;
@@ -148,7 +148,7 @@
         .footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px}
         #syncStatus{font-size:11px;color:var(--primary);text-align:right;margin-top:5px;font-weight:600}
 
-        /* --- MODAL (POP-UP) STİLLERİ --- */
+        /* MODAL (POP-UP) STİLLERİ */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -280,7 +280,7 @@
         <div class="stat"><strong id="yearCount">0</strong><span data-i18n="statYear">Bu yıl okunan</span></div>
     </section>
 
-    <!-- OPTİMİZE EDİLMİŞ KOMPAKT İSTATİSTİK PANELİ -->
+    <!-- KOMPAKT İSTATİSTİK PANELİ -->
     <div class="stats-compact">
         <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-weight:600; color:var(--ink);" data-i18n="statsTitle">İstatistik Yılı:</span>
@@ -408,7 +408,7 @@ const dict = {
         appTitle: "Kitap Defterim",
         appSub: "Gerçek zamanlı senkronize akıllı kitaplık.",
         btnLoadJson: "📂 JSON Yedek Dosyasını İçe Aktar",
-        btnSelectCover: "Cihazdan Fotoğraf Seç",
+        btnSelectCover: "🖼️ Cihazdan Fotoğraf Seç",
         statRead: "Okunan kitap",
         statCurrent: "Devam eden",
         statYear: "Bu yıl okunan",
@@ -739,10 +739,12 @@ async function loadFromCloud(){
 async function saveToCloud(item){
     $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':'Kaydediliyor...');
     try {
-        if(editing !== null && editing !== undefined){
+        if(editing !== null && editing !== undefined && editing !== ''){
+            // Güncelleme işlemi (ID eşleşmesi)
             const { error } = await db.from('books').update(item).eq('id', editing);
             if(error) throw error;
         } else {
+            // Yeni Ekleme işlemi
             const { error } = await db.from('books').insert([item]);
             if(error) throw error;
         }
@@ -755,14 +757,14 @@ async function saveToCloud(item){
 }
 
 async function deleteBook(id){
-    const b = books.find(x => x.id === id);
+    const b = books.find(x => x.id == id);
     const delConfirm = currentLang==='en'?`Do you want to delete "${b.title}"?`:`“${b.title}” silinsin mi?`;
     if(b && confirm(delConfirm)){
         try {
             const { error } = await db.from('books').delete().eq('id', id);
             if(error) throw error;
             closeModal();
-            if(editing === id) resetForm();
+            if(editing == id) resetForm();
             loadFromCloud();
         } catch(e) {
             alert('Silme hatası: ' + e.message);
@@ -772,7 +774,7 @@ async function deleteBook(id){
 
 // --- MODAL (POP-UP) İŞLEMLERİ ---
 function openModal(id) {
-    const b = books.find(x => x.id === id);
+    const b = books.find(x => x.id == id);
     if(!b) return;
     activeModalBookId = id;
 
@@ -924,7 +926,7 @@ function resetForm(){
 
 $('bookForm').onsubmit = e => {
     e.preventDefault();
-    const old = books.find(b => b.id === editing);
+    const old = books.find(b => b.id == editing);
     const item = {
         title: $('title').value.trim(),
         author: $('author').value.trim(),
@@ -942,9 +944,10 @@ $('bookForm').onsubmit = e => {
 $('cancelEdit').onclick = resetForm;
 
 function editBook(id){
-    const b = books.find(x => x.id === id);
+    const b = books.find(x => x.id == id);
     if(!b) return;
-    editing = id; coverData = null;
+    editing = b.id; // Doğrudan kayıttaki ID'yi alıyoruz
+    coverData = null;
     $('title').value = b.title;
     $('author').value = b.author;
     $('month').value = b.month;
@@ -953,8 +956,14 @@ function editBook(id){
     $('rating').value = String(b.rating || 0);
     $('notes').value = b.notes || '';
     $('cover').value = '';
-    $('fileCustomLabel').innerHTML = b.cover ? '🖼️ <span style="color:var(--primary)">Mevcut kapak korunacak</span>' : `🖼️ <span>${t('btnSelectCover')}</span>`;
-    $('coverHint').textContent = b.cover ? 'Mevcut kapak korunacak.' : t('hintCover');
+    
+    // Eğer kayıtlı kapak varsa hafızaya alalım ki düzenlerken kaybolmasın
+    if(b.cover) {
+        coverData = b.cover;
+    }
+
+    $('fileCustomLabel').innerHTML = b.cover ? '🖼️ <span style="color:var(--primary)">Mevcut kapak yüklü</span>' : `🖼️ <span>${t('btnSelectCover')}</span>`;
+    $('coverHint').textContent = b.cover ? 'Mevcut kapak korunuyor.' : t('hintCover');
     $('formTitle').textContent = t('formEdit');
     $('saveBtn').textContent = t('btnUpdate');
     $('cancelWrap').classList.remove('hidden');
@@ -991,7 +1000,7 @@ function render(){
     $('books').innerHTML = list.map(b => {
         const translatedMonth = translateMonth(b.month, currentLang);
         const translatedNote = translateNote(b.notes, currentLang);
-        return `<article class="book" onclick="openModal(${b.id})">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}</div></article>`;
+        return `<article class="book" onclick="openModal('${b.id}')">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}</div></article>`;
     }).join('');
 }
 
