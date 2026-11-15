@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#25d7eb">
+    <meta name="theme-color" content="#2563eb">
     <title>Kitap Defterim (Supabase Cloud)</title>
     <!-- Supabase Kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -672,6 +672,108 @@ const monthTranslateMap = {
     'Aralık': {en:'December', de:'Dezember', ru:'Декабрь', zh:'十二月'}
 };
 
+// Çok dilli not çeviri sözlüğü (Tüm kitap özetleri için)
+const noteMultiLangMap = {
+    "Yaşam Sinyali": {
+        tr: "Tür: Bilimsel Gerilim, Felsefi Macera, Gizem\nTemel Odak: Evrenin kökeni, kozmoloji, bilim ile inancın kesişim noktaları ve insanlığın varoluş sorgulaması.\nGenel Bakış: Roman; tarihin gizemli sayfaları ile modern kuantum fiziğinin sınırları arasında köprü kuran soluk soluğa bir arayışı konu alıyor. Ana karakterimiz, yine akıl almaz bir bulmacanın ve bilimsel bir sırrın peşinde, adeta evrenin sesini duymaya çalışacağı küresel bir maceraya sürükleniyor.\nAlt Metin: \"Biz nereden geldik ve bu evrende yalnız mıyız?\" sorusuna hem bilimsel veriler hem de felsefi derinlikle yaklaşan, okuru sürekli düşündüren ve kaşif ruhunu tetikleyen zihin açıcı bir hikaye.",
+        en: "Genre: Scientific Thriller, Philosophical Adventure, Mystery\nCore Focus: Origins of the universe, cosmology, intersections of science and faith, and human existential inquiry.\nOverview: A breathtaking quest bridging mysterious historical pages and modern quantum physics.",
+        de: "Genre: Wissenschaftlicher Thriller, Philosophisches Abenteuer, Mystery\nFokus: Ursprung des Universums, Kosmologie, Schnittpunkte von Wissenschaft und Glaube.",
+        ru: "Жанр: Научный триллер, Философское приключение, Детектив\nФокус: Происхождение вселенной, космология, наука и вера.",
+        zh: "类型：科学惊悚、哲学冒险、悬疑\n核心：宇宙起源、宇宙学、科学与信仰."
+    },
+    "Süleyman'ın Anahtarı": {
+        tr: "Tür: Bilimsel Gerilim, Felsefi Macera, Ezoterik Gizem\nTemel Odak: Kuantum fiziği, evrenin ve bilincin doğası, zihin ile madde arasındaki bağlar ve ölümden sonraki yaşam.\nGenel Bakış: İsviçre'deki CERN laboratuvarlarında gizemli bir olayla başlar ve uluslararası bir komploya dönüşür.",
+        en: "Genre: Scientific Thriller, Philosophical Adventure, Esoteric Mystery\nCore Focus: Quantum physics, nature of universe and consciousness, life after death.",
+        de: "Genre: Wissenschaftlicher Thriller, Philosophisches Abenteuer\nFokus: Quantenphysik, Bewusstsein, Leben nach dem Tod.",
+        ru: "Жанр: Научный триллер, Эзотерическая мистерия\nФокус: Квантовая физика, природа вселенной и сознания.",
+        zh: "类型：科学惊悚、哲学冒险、秘契悬疑\n核心：量子 physics、宇宙与意识的本质."
+    },
+    "İsa'nın Son Sırrı": {
+        tr: "Tür: Bilimsel Gerilim, Teolojik Gizem, Tarihi Macera\nTemel Odak: İsa'nın hayatına dair kayıp sırlar, dinler tarihi, bilim ile inancın uzlaşması.",
+        en: "Genre: Scientific Thriller, Theological Mystery, Historical Adventure\nCore Focus: Lost secrets of Jesus' life, history of religions, reconciliation of science and faith.",
+        de: "Genre: Wissenschaftlicher Thriller, Theologisches Geheimnis\nFokus: Verlorene Geheimnisse aus dem Leben Jesu.",
+        ru: "Жанр: Научный триллер, Богословская мистерия\nФокус: Тайны жизни Иисуса, история религий.",
+        zh: "类型：科学惊悚、神学悬疑、历史冒险\n核心：耶稣生uer的失落秘密、宗教历史."
+    },
+    "Rothschild İmparatorluğu": {
+        tr: "Açıklama: Rothschild ailesinin finansal gücü, tarihsel olaylar, savaşların finansmanı ve küresel sistem üzerine eleştirel bir inceleme.",
+        en: "Description: A critical investigation into the Rothschild family's financial power, historical events, and global system.",
+        de: "Beschreibung: Eine kritische Untersuchung zur Finanzkraft der Familie Rothschild.",
+        ru: "Описание: Критическое исследование финансовой мощи семьи Ротшильдов.",
+        zh: "描述：对罗斯 Rothschild 家族金融实力、历史事件和全球体系的批判性调查。"
+    },
+    "Cehennem": {
+        tr: "Tür: Simgesel Gerilim, Gizem, Macera\nTemel Odak: Dante Alighieri’nin İlahi Komedya eseri, transhumanizm ve dünya nüfus artışı krizi.",
+        en: "Genre: Symbolic Thriller, Mystery, Adventure\nCore Focus: Dante's Inferno, transhumanism, and global overpopulation crisis.",
+        de: "Genre: Symbolischer Thriller, Mystery, Abenteuer\nFokus: Dantes Inferno, Transhumanismus und Übervölkerungskrise.",
+        ru: "Жанр: Символический триллер, Детектив, Приключения\nФокус: «Инферно» Данте, трансгуманизм.",
+        zh: "类型：象征惊悚、悬疑、冒险\n核心：但丁《地狱》、超人类主义与全球人口危机."
+    },
+    "Atomik Alışkanlıklar": {
+        tr: "Tür: Kişisel Gelişim, Psikoloji, Verimlilik\nTemel Odak: Küçük alışkanlıkların gücü, sistem kurma, kimlik değişimi ve iyi alışkanlıkları kalıcı kılma.",
+        en: "Genre: Self-Help, Psychology, Productivity\nCore Focus: Power of small habits, systems, identity change, and making good habits stick.",
+        de: "Genre: Selbsthilfe, Psychologie, Produktivität\nFokus: Kraft kleiner Gewohnheiten, Systeme, Identitätswandel.",
+        ru: "Жанр: Саморазвитие, Психология, Продуктивность\nФокус: Сила маленьких привычек, построение систем.",
+        zh: "类型：自助、心理学、生产力\n核心：微习惯的力量、系统建立、身份转变."
+    },
+    "Komutanın Şüpheli Ölümü": {
+        tr: "Tür: Araştırma, İnceleme, Yakın Tarih, Politik Gerilim\nTemel Odak: Şüpheli askeri ölümler, derin devlet tartışmaları ve suikast iddiaları.",
+        en: "Genre: Investigation, Recent History, Political Thriller\nCore Focus: Suspicious military deaths, deep state debates, and assassination claims.",
+        de: "Genre: Recherche, Zeitgeschichte, Politischer Thriller\nFokus: Verdächtige Militärtode, Debatten um den tiefen Staat.",
+        ru: "Жанр: Расследование, Новейшая история, Политический триллер\nФокус: Подозрительные смерти военных, споры о глубинном государстве.",
+        zh: "类型：调查研究、近代史、政治惊悚\n核心：可疑的军事死亡、深层政府辩论."
+    },
+    "Mavi Vurgun": {
+        tr: "Tür: Denizaltı Macera, Aksiyon, Hazineler ve Gizem\nTemel Odak: Deniz arkeolojisi, batık gemiler, kurtarma operasyonları.",
+        en: "Genre: Underwater Adventure, Action, Mystery\nCore Focus: Marine archaeology, shipwrecks, and salvage operations.",
+        de: "Genre: Unterwasserabenteuer, Action, Mystery\nFokus: Meeresarchäologie, Schiffswracks, Bergungsoperationen.",
+        ru: "Жанр: Подводные приключения, Экшен, Детектив\nФокус: Морская археология, затонувшие корабли.",
+        zh: "类型：水下冒险、动作、悬疑\n核心：海洋考古、沉船、打捞行动."
+    },
+    "Cehennere Kanyonu": {
+        tr: "Tür: Askeri Tarih, Anı, Mücadele, Liderlik\nTemel Odak: Güneydoğu'da terörle mücadele, askeri strateji ve liderlik psikolojisi.",
+        en: "Genre: Military History, Memoir, Leadership\nCore Focus: Counter-terrorism, military strategy, and leadership psychology.",
+        de: "Genre: Militärgeschichte, Memoiren, Führung\nFokus: Antiterrorismus, Militärstrategie.",
+        ru: "Жанр: Военная история, Мемуары, Лидерство\nФокус: Борьба с терроризмом, военная стратегия.",
+        zh: "类型：军事历史、回忆录、领导力\n核心：反恐斗争、军事战略、领导力心理学."
+    },
+    "Şu hortumlu dünyada fil yalnız bir hayvandır": {
+        tr: "Tür: Kişisel Gelişim, İletişim, İş Yaşamı, Mizah\nTemel Odak: İnsan ilişkileri, önyargılar, iş hayatında başarı ve dürüstlük.",
+        en: "Genre: Self-Help, Communication, Business, Humor\nCore Focus: Human relations, prejudices, success in business, and honesty.",
+        de: "Genre: Selbsthilfe, Kommunikation, Wirtschaft, Humor\nFokus: Menschliche Beziehungen, Vorurteile, Erfolg im Geschäftsleben.",
+        ru: "Жанр: Саморазвитие, Общение, Бизнес, Юмор\nФокус: Человеческие отношения, предрассудки, успех в бизнесе.",
+        zh: "类型：自助、沟通、商业、幽默\n核心：人际关系、偏见、商业成功、诚实."
+    },
+    "Buzdağı": {
+        tr: "Tür: Sualtı Macera, Denizcilik, Tarihi Gerilim\nTemel Odak: Kayıp bir zenginlik, buzullar altında kalan gizemli bir batık.",
+        en: "Genre: Underwater Adventure, Maritime, Historical Thriller\nCore Focus: Lost wealth, a mysterious shipwreck under glaciers.",
+        de: "Genre: Unterwasserabenteuer, Schifffahrt, Historischer Thriller\nFokus: Verlorener Reichtum, ein mysteriöses Schiffswrack.",
+        ru: "Жанр: Подводные приключения, Исторический триллер\nФокус: Потерянное сокровище, затонувшее судно подо льдом.",
+        zh: "类型：水下冒险、航海、历史惊悚\n核心：失落的财富、冰川下的神秘沉船."
+    },
+    "Aptalı Tanımak": {
+        tr: "Tür: Bilimsel Deneme, Felsefe, Toplum Eleştirisi\nTemel Odak: Cehalet, eleştirel düşünce ve bilimsel metodoloji.",
+        en: "Genre: Scientific Essay, Philosophy, Social Criticism\nCore Focus: Ignorance, critical thinking, and scientific methodology.",
+        de: "Genre: Wissenschaftlicher Essay, Philosophie, Gesellschaftskritik\nFokus: Unwissenheit, kritisches Denken und wissenschaftliche Methodik.",
+        ru: "Жанр: Научное эссе, Философия, Социальная критика\nФокус: Невежество, критическое мышление.",
+        zh: "类型：科学散文、哲学、社会批判\n核心：无知、批判性思维、科学方法论."
+    },
+    "Enkaz": {
+        tr: "Tür: Sualtı Aksiyon, Macera, Gizem\nTemel Odak: Deniz tabanındaki tehlikeler, kayıp teknolojiler ve çevre felaketleri.",
+        en: "Genre: Underwater Action, Adventure, Mystery\nCore Focus: Dangers at the ocean floor, lost technologies, and environmental disasters.",
+        de: "Genre: Unterwasser-Action, Abenteuer, Mystery\nFokus: Gefahren am Meeresboden, verlorene Technologien.",
+        ru: "Жанр: Подводный экшен, Приключения, Детектив\nФокус: Опасности на дне океана, потерянные технологии.",
+        zh: "类型：水下动作、冒险、悬疑\n核心：海底危险、失落的技术、环境灾难."
+    },
+    "Tanrı'nın Formülü": {
+        tr: "Tür: Bilimsel Gerilim, Felsefe, Teolojik Macera\nTemel Odak: Einstein’ın teorileri, Tanrı’nın kanıtı, bilim ile dinin buluşması.",
+        en: "Genre: Scientific Thriller, Philosophy, Theological Adventure\nCore Focus: Einstein's theories, proof of God, convergence of science and religion.",
+        de: "Genre: Wissenschaftlicher Thriller, Philosophie, Theologisches Abenteuer\nFokus: Einsteins Theorien, Gottesbeweis.",
+        ru: "Жанр: Научный триллер, Философия, Богословские приключения\nФокус: Теории Эйнштейна, доказательство Бога.",
+        zh: "类型：科学惊悚、哲学、神学冒险\n核心：爱因斯坦的理论、上帝的证明、科学与宗教的交汇."
+    }
+};
+
 function translateMonth(mName, lang){
     if(lang === 'tr') return mName;
     if(monthTranslateMap[mName] && monthTranslateMap[mName][lang]){
@@ -680,16 +782,23 @@ function translateMonth(mName, lang){
     return mName;
 }
 
-function translateNote(noteText, lang){
-    if(!noteText) return '';
-    const text = noteText.trim();
+function translateNote(title, originalNote, lang){
+    if(lang === 'tr') return originalNote;
+    
+    // Eğer kitap adı sözlükte varsa ve o dilde çevirisi mevcutsa onu döndür
+    if(noteMultiLangMap[title] && noteMultiLangMap[title][lang]){
+        return noteMultiLangMap[title][lang];
+    }
+    
+    // Kısa durum notları için genel çeviriler
+    const text = (originalNote || '').trim();
     if(text === 'Halen okunuyor.' || text === 'Halen okunuyor'){
         return {en:'Currently reading.', de:'Lese gerade.', ru:'Читаю сейчас.', zh:'正在阅读。'}[lang] || text;
     }
     if(text === 'Okundu.' || text === 'Okundu'){
         return {en:'Read.', de:'Gelesen.', ru:'Прочитано.', zh:'已读。'}[lang] || text;
     }
-    return text;
+    return originalNote;
 }
 
 const $ = id => document.getElementById(id);
@@ -800,7 +909,7 @@ function openModal(id) {
     $('modalMeta').innerHTML = `<span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span>`;
     $('modalRating').innerHTML = b.rating ? `${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}` : '';
     
-    const translatedNote = translateNote(b.notes, currentLang);
+    const translatedNote = translateNote(b.title, b.notes, currentLang);
     $('modalNotes').textContent = translatedNote || (currentLang==='en'?'No notes added for this book yet.':'Bu kitap için henüz not eklenmemiş.');
 
     $('modalCoverContainer').innerHTML = b.cover ? `<img class="modal-cover" src="${b.cover}" alt="Kapak">` : '<div class="modal-cover placeholder" style="display:grid;place-items:center;font-size:32px;">📖</div>';
@@ -1023,7 +1132,7 @@ function render(){
     
     $('books').innerHTML = list.map(b => {
         const translatedMonth = translateMonth(b.month, currentLang);
-        const translatedNote = translateNote(b.notes, currentLang);
+        const translatedNote = translateNote(b.title, b.notes, currentLang);
         return `<article class="book" onclick="openModal('${b.id}')">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}</div></article>`;
     }).join('');
 }
