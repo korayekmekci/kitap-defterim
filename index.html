@@ -3,36 +3,38 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#35758f">
+    <meta name="theme-color" content="#2563eb">
     <title>Kitap Defterim (Supabase Cloud)</title>
     <!-- Supabase Kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root{--bg:#f4f2ec;--paper:#fffefa;--ink:#25332e;--muted:#78817b;--green:#315b4c;--line:#e7e3d9;--gold:#c49a52;--red:#a54b43}
+        /* --- RENK PALETİ: ETKİLEYİCİ MAVİ TONYARI --- */
+        :root{--bg:#f4f6f9;--paper:#ffffff;--ink:#1e293b;--muted:#64748b;--primary:#2563eb;--primary-dark:#1d4ed8;--line:#e2e8f0;--gold:#d97706;--red:#dc2626}
         *{box-sizing:border-box}
         body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui}
         main{max-width:740px;margin:auto;padding:18px 14px 40px}
         header{padding:12px 2px 20px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
         .header-left{flex:1}
-        .eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--green);font-weight:700}
+        .eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--primary);font-weight:700}
         h1{font:600 34px Georgia;margin:5px 0}
         .sub,.muted{color:var(--muted);font-size:12px}
-        .lang-select{padding:6px 10px;border-radius:8px;border:1px solid #dcded6;background:white;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+        .lang-select{padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;background:white;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
         .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
         .stat,.panel,.book{background:var(--paper);border:1px solid var(--line);border-radius:15px}
         .stat{padding:11px}
-        .stat strong{display:block;font-size:23px;color:var(--green)}
+        .stat strong{display:block;font-size:23px;color:var(--primary)}
         .stat span{font-size:11px;color:var(--muted)}
         .panel{padding:15px;margin-bottom:14px}
         .panel h2{font-size:16px;margin:0 0 12px}
-        label{display:block;font-size:12px;font-weight:700;color:#66716a;margin:10px 0 5px}
-        input,select,textarea{width:100%;border:1px solid #dcded6;border-radius:10px;padding:11px;font:inherit;background:white;color:var(--ink);min-height:43px}
+        label{display:block;font-size:12px;font-weight:700;color:#475569;margin:10px 0 5px}
+        input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font:inherit;background:white;color:var(--ink);min-height:43px}
         textarea{min-height:70px}
         .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
         button{border:0;border-radius:10px;padding:10px 13px;font:650 13px system-ui;cursor:pointer}
-        .primary{background:var(--green);color:white;width:100%;margin-top:14px}
-        .secondary{background:#e9eee9;color:var(--green)}
-        .danger{background:#f7e9e6;color:var(--red)}
+        .primary{background:var(--primary);color:white;width:100%;margin-top:14px}
+        .primary:hover{background:var(--primary-dark)}
+        .secondary{background:#eff6ff;color:var(--primary)}
+        .danger{background:#fee2e2;color:var(--red)}
         
         .cool-upload-btn {
             display: inline-flex;
@@ -40,26 +42,24 @@
             justify-content: center;
             gap: 8px;
             width: 100%;
-            background: linear-gradient(135deg, #315b4c 0%, #223f35 100%);
-            color: #fffefa;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
             padding: 12px 16px;
             border-radius: 12px;
             font-weight: 650;
             font-size: 13px;
             cursor: pointer;
             border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 4px 12px rgba(49, 91, 76, 0.25);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
             transition: all 0.25s ease;
             margin-bottom: 6px;
             text-align: center;
         }
         .cool-upload-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(49, 91, 76, 0.35);
-            background: linear-gradient(135deg, #386757 0%, #284a3e 100%);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
         }
 
-        /* --- ÖZEL DOSYA SEÇCİ BUTON STİLİ --- */
         .file-upload-wrapper {
             display: block;
             margin-top: 5px;
@@ -70,8 +70,8 @@
             justify-content: center;
             gap: 8px;
             width: 100%;
-            background: #f0ede6;
-            border: 1px dashed #c8c2b4;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
             color: var(--ink);
             padding: 12px 16px;
             border-radius: 10px;
@@ -82,9 +82,9 @@
             text-align: center;
         }
         .file-upload-label:hover {
-            background: #e6e2d8;
-            border-color: var(--green);
-            color: var(--green);
+            background: #f1f5f9;
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         .hidden{display:none!important}
@@ -95,32 +95,32 @@
         .toolbar input{flex:1;min-width:0}
         .toolbar select{width:140px}
         .book{display:flex;gap:11px;padding:12px;margin-bottom:10px;cursor:pointer;transition:all 0.2s ease}
-        .book:hover{border-color:var(--green);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.03)}
-        .cover{width:68px;height:96px;flex:0 0 68px;border-radius:6px;object-fit:cover;background:#e9e6dc}
+        .book:hover{border-color:var(--primary);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.03)}
+        .cover{width:68px;height:96px;flex:0 0 68px;border-radius:6px;object-fit:cover;background:#e2e8f0}
         .placeholder{display:grid;place-items:center;font-size:25px}
         .bookbody{flex:1;min-width:0}
         .book h3{font:600 18px Georgia;margin:0 0 3px;overflow-wrap:anywhere}
-        .author{font-size:13px;color:#65716a}
+        .author{font-size:13px;color:var(--muted)}
         .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-        .tag{font-size:10px;padding:4px 8px;border-radius:20px;background:#edf1ec;color:var(--green);font-weight:700}
-        .tag.current{background:#f5eddb;color:#85642d}
-        .rating{color:#a77a2f;letter-spacing:1px;margin-top:5px}
-        .note{font-size:12px;color:#69736d;margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .tag{font-size:10px;padding:4px 8px;border-radius:20px;background:#eff6ff;color:var(--primary);font-weight:700}
+        .tag.current{background:#fef3c7;color:#b45309}
+        .rating{color:var(--gold);letter-spacing:1px;margin-top:5px}
+        .note{font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
         .actions button{padding:6px 9px;font-size:11px}
-        .empty{text-align:center;padding:25px 14px;color:var(--muted);background:var(--paper);border:1px dashed #d8d4c9;border-radius:14px}
+        .empty{text-align:center;padding:25px 14px;color:var(--muted);background:var(--paper);border:1px dashed #cbd5e1;border-radius:14px}
         .yearline{display:flex;justify-content:space-between;align-items:center;gap:8px}
         .yearline select{width:105px}
         .chartrow{display:grid;grid-template-columns:48px 1fr 24px;gap:8px;align-items:center;margin:8px 0;font-size:12px}
-        .track{height:9px;background:#eeece5;border-radius:20px;overflow:hidden}
-        .bar{height:100%;background:var(--green);border-radius:20px}
+        .track{height:9px;background:#e2e8f0;border-radius:20px;overflow:hidden}
+        .bar{height:100%;background:var(--primary);border-radius:20px}
         .footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px}
-        #syncStatus{font-size:11px;color:var(--green);text-align:right;margin-top:5px;font-weight:600}
+        #syncStatus{font-size:11px;color:var(--primary);text-align:right;margin-top:5px;font-weight:600}
 
         /* --- MODAL (POP-UP) STİLLERİ --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(37, 51, 46, 0.5);
+            background: rgba(15, 23, 42, 0.5);
             backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
@@ -144,7 +144,7 @@
             max-height: 90vh;
             overflow-y: auto;
             padding: 24px;
-            box-shadow: 0 12px 32px rgba(37, 51, 46, 0.15);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.15);
             transform: translateY(20px);
             transition: transform 0.25s ease;
             position: relative;
@@ -155,7 +155,7 @@
         .modal-close {
             position: absolute;
             top: 16px; right: 16px;
-            background: #f0ede6;
+            background: #f1f5f9;
             border: none;
             border-radius: 50%;
             width: 32px; height: 32px;
@@ -167,7 +167,7 @@
             transition: background 0.2s;
         }
         .modal-close:hover {
-            background: #e2ded4;
+            background: #e2e8f0;
         }
         .modal-header {
             display: flex;
@@ -179,7 +179,7 @@
             width: 90px; height: 130px;
             border-radius: 8px;
             object-fit: cover;
-            background: #e9e6dc;
+            background: #e2e8f0;
             flex: 0 0 90px;
         }
         .modal-title-area h3 {
@@ -197,12 +197,12 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: var(--green);
+            color: var(--primary);
             font-weight: 700;
             margin: 16px 0 6px;
         }
         .modal-notes-box {
-            background: #f8f6f0;
+            background: #f8fafc;
             border: 1px solid var(--line);
             border-radius: 12px;
             padding: 14px;
@@ -260,8 +260,8 @@
             <button class="secondary" id="searchCoverBtn" type="button" style="margin-top:8px; width:100%;" data-i18n="btnSearchCover">🌐 İnternetten Kapak Bul ve Onayla</button>
             
             <div class="grid" style="margin-top:10px;">
-                <div><label data-i18n="labelMonth">Okuduğum ay</label><select id="month" required></select></div>
-                <div><label data-i18n="labelYear">Yıl</label><input id="year" type="number" min="1900" max="2100" required></div>
+                <div><label data-i18n="labelMonth">Okunan ay (Kayıt için)</label><select id="month" required></select></div>
+                <div><label data-i18n="labelYear">Okunan yıl (Kayıt için)</label><input id="year" type="number" min="1900" max="2100" required></div>
             </div>
 
             <div class="grid">
@@ -285,7 +285,6 @@
                 </div>
             </div>
 
-            <!-- ŞIKLAŞTIRILMIŞ KAPAK YÜKLEME ALANI -->
             <label data-i18n="labelCover">Kitap kapağı (Cihazından seç)</label>
             <div class="file-upload-wrapper">
                 <label for="cover" class="file-upload-label" id="fileCustomLabel">
@@ -311,8 +310,8 @@
             <select id="statsYear" aria-label="İstatistik yılı"></select>
         </div>
         <div class="grid" style="margin:12px 0">
-            <div><div class="muted" data-i18n="statsSelected">Seçili yılda okunan</div><strong id="selectedYearTotal" style="font-size:24px;color:var(--green)">0</strong></div>
-            <div><div class="muted" data-i18n="statsAvg">Aylık ortalama</div><strong id="monthlyAverage" style="font-size:24px;color:var(--green)">0</strong></div>
+            <div><div class="muted" data-i18n="statsSelected">Seçili yılda okunan</div><strong id="selectedYearTotal" style="font-size:24px;color:var(--primary)">0</strong></div>
+            <div><div class="muted" data-i18n="statsAvg">Aylık ortalama</div><strong id="monthlyAverage" style="font-size:24px;color:var(--primary)">0</strong></div>
         </div>
         <div id="monthChart"></div>
     </section>
@@ -386,9 +385,9 @@ const dict = {
         labelTitle: "Kitap adı",
         labelAuthor: "Yazar adı",
         btnSearchCover: "🌐 İnternetten Kapak Bul ve Onayla",
-        labelMonth: "Okuduğum ay",
+        labelMonth: "Okunan ay (Kayıt için)",
+        labelYear: "Okunan yıl (Kayıt için)",
         optMonth: "Ay seç",
-        labelYear: "Yıl",
         labelStatus: "Durum",
         statusRead: "Okudum",
         statusCurrent: "Okumaya devam ediyorum",
@@ -432,9 +431,9 @@ const dict = {
         labelTitle: "Book title",
         labelAuthor: "Author name",
         btnSearchCover: "🌐 Find Cover Online & Confirm",
-        labelMonth: "Month read",
+        labelMonth: "Month read (For record)",
+        labelYear: "Year read (For record)",
         optMonth: "Select month",
-        labelYear: "Year",
         labelStatus: "Status",
         statusRead: "Read",
         statusCurrent: "Currently reading",
@@ -478,9 +477,9 @@ const dict = {
         labelTitle: "Buchtitel",
         labelAuthor: "Autor",
         btnSearchCover: "🌐 Online-Cover finden & bestätigen",
-        labelMonth: "Lesemonat",
+        labelMonth: "Lesemonat (Für Eintrag)",
+        labelYear: "Lesejahr (Für Eintrag)",
         optMonth: "Monat wählen",
-        labelYear: "Jahr",
         labelStatus: "Status",
         statusRead: "Gelesen",
         statusCurrent: "Lese gerade",
@@ -524,9 +523,9 @@ const dict = {
         labelTitle: "Название книги",
         labelAuthor: "Автор",
         btnSearchCover: "🌐 Найти обложку в сети",
-        labelMonth: "Месяц чтения",
+        labelMonth: "Месяц чтения (для записи)",
+        labelYear: "Год чтения (для записи)",
         optMonth: "Выберите месяц",
-        labelYear: "Год",
         labelStatus: "Статус",
         statusRead: "Прочитано",
         statusCurrent: "Читаю",
@@ -570,9 +569,9 @@ const dict = {
         labelTitle: "书名",
         labelAuthor: "作者",
         btnSearchCover: "🌐 联网查找并确认封面",
-        labelMonth: "阅读月份",
+        labelMonth: "阅读月份（用于记录）",
+        labelYear: "阅读年份（用于记录）",
         optMonth: "选择月份",
-        labelYear: "年份",
         labelStatus: "状态",
         statusRead: "已读",
         statusCurrent: "正在读",
@@ -851,8 +850,7 @@ $('cover').onchange = e => {
     const f = e.target.files[0];
     if(!f){ coverData = null; return; }
     
-    // Seçilen dosya adını etikette gösterelim
-    $('fileCustomLabel').innerHTML = `✔ <span style="color:var(--green); font-weight:700;">${f.name}</span>`;
+    $('fileCustomLabel').innerHTML = `✔ <span style="color:var(--primary); font-weight:700;">${f.name}</span>`;
 
     const reader = new FileReader();
     reader.onload = event => {
@@ -889,7 +887,6 @@ function resetForm(){
     $('saveBtn').textContent = t('btnSave');
     $('cancelWrap').classList.add('hidden');
     $('coverHint').textContent = t('hintCover');
-    // Dosya etiketini eski haline getir
     $('fileCustomLabel').innerHTML = `🖼️ <span data-i18n="btnSelectCover">${t('btnSelectCover')}</span>`;
 }
 
@@ -924,7 +921,7 @@ function editBook(id){
     $('rating').value = String(b.rating || 0);
     $('notes').value = b.notes || '';
     $('cover').value = '';
-    $('fileCustomLabel').innerHTML = b.cover ? '🖼️ <span style="color:var(--green)">Mevcut kapak korunacak</span>' : `🖼️ <span>${t('btnSelectCover')}</span>`;
+    $('fileCustomLabel').innerHTML = b.cover ? '🖼️ <span style="color:var(--primary)">Mevcut kapak korunacak</span>' : `🖼️ <span>${t('btnSelectCover')}</span>`;
     $('coverHint').textContent = b.cover ? 'Mevcut kapak korunacak.' : t('hintCover');
     $('formTitle').textContent = t('formEdit');
     $('saveBtn').textContent = t('btnUpdate');
