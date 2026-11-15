@@ -8,7 +8,6 @@
     <!-- Supabase Kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* --- RENK PALETİ: ETKİLEYİCİ MAVİ TONYARI --- */
         :root{--bg:#f4f6f9;--paper:#ffffff;--ink:#1e293b;--muted:#64748b;--primary:#2563eb;--primary-dark:#1d4ed8;--line:#e2e8f0;--gold:#d97706;--red:#dc2626}
         *{box-sizing:border-box}
         body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui}
@@ -19,6 +18,7 @@
         h1{font:600 34px Georgia;margin:5px 0}
         .sub,.muted{color:var(--muted);font-size:12px}
         .lang-select{padding:6px 10px;border-radius:8px;border:1px solid #cbd5e1;background:white;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+        
         .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
         .stat,.panel,.book{background:var(--paper);border:1px solid var(--line);border-radius:15px}
         .stat{padding:11px}
@@ -26,6 +26,43 @@
         .stat span{font-size:11px;color:var(--muted)}
         .panel{padding:15px;margin-bottom:14px}
         .panel h2{font-size:16px;margin:0 0 12px}
+        
+        /* --- OPTİMİZE EDİLMİŞ KOMPAKT İSTATİSTİK PANELİ --- */
+        .stats-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+        .stats-compact select {
+            width: 90px;
+            min-height: 32px;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+        .stats-compact-items {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .stats-compact-item span {
+            color: var(--muted);
+            font-size: 11px;
+        }
+        .stats-compact-item strong {
+            color: var(--primary);
+            font-size: 15px;
+            margin-left: 4px;
+        }
+
         label{display:block;font-size:12px;font-weight:700;color:#475569;margin:10px 0 5px}
         input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;font:inherit;background:white;color:var(--ink);min-height:43px}
         textarea{min-height:70px}
@@ -108,11 +145,6 @@
         .note{font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
         .actions button{padding:6px 9px;font-size:11px}
         .empty{text-align:center;padding:25px 14px;color:var(--muted);background:var(--paper);border:1px dashed #cbd5e1;border-radius:14px}
-        .yearline{display:flex;justify-content:space-between;align-items:center;gap:8px}
-        .yearline select{width:105px}
-        .chartrow{display:grid;grid-template-columns:48px 1fr 24px;gap:8px;align-items:center;margin:8px 0;font-size:12px}
-        .track{height:9px;background:#e2e8f0;border-radius:20px;overflow:hidden}
-        .bar{height:100%;background:var(--primary);border-radius:20px}
         .footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px}
         #syncStatus{font-size:11px;color:var(--primary);text-align:right;margin-top:5px;font-weight:600}
 
@@ -248,6 +280,18 @@
         <div class="stat"><strong id="yearCount">0</strong><span data-i18n="statYear">Bu yıl okunan</span></div>
     </section>
 
+    <!-- OPTİMİZE EDİLMİŞ KOMPAKT İSTATİSTİK PANELİ -->
+    <div class="stats-compact">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-weight:600; color:var(--ink);" data-i18n="statsTitle">İstatistik Yılı:</span>
+            <select id="statsYear" aria-label="İstatistik yılı"></select>
+        </div>
+        <div class="stats-compact-items">
+            <div class="stats-compact-item"><span data-i18n="statsSelected">Seçilen Yıl:</span><strong id="selectedYearTotal">0</strong></div>
+            <div class="stats-compact-item"><span data-i18n="statsAvg">Aylık Ort:</span><strong id="monthlyAverage">0</strong></div>
+        </div>
+    </div>
+
     <section class="panel">
         <h2 id="formTitle" data-i18n="formAdd">＋ Kitap ekle</h2>
         <form id="bookForm">
@@ -302,18 +346,6 @@
                 <button class="secondary" type="button" id="cancelEdit" data-i18n="btnCancel">Düzenlemeyi iptal et</button>
             </div>
         </form>
-    </section>
-
-    <section class="panel">
-        <div class="yearline">
-            <h2 style="margin:0" data-i18n="statsTitle">Okuma istatistikleri</h2>
-            <select id="statsYear" aria-label="İstatistik yılı"></select>
-        </div>
-        <div class="grid" style="margin:12px 0">
-            <div><div class="muted" data-i18n="statsSelected">Seçili yılda okunan</div><strong id="selectedYearTotal" style="font-size:24px;color:var(--primary)">0</strong></div>
-            <div><div class="muted" data-i18n="statsAvg">Aylık ortalama</div><strong id="monthlyAverage" style="font-size:24px;color:var(--primary)">0</strong></div>
-        </div>
-        <div id="monthChart"></div>
     </section>
 
     <div class="section-title">
@@ -399,9 +431,9 @@ const dict = {
         btnSave: "Kitabı kaydet",
         btnUpdate: "Değişiklikleri kaydet",
         btnCancel: "Düzenlemeyi iptal et",
-        statsTitle: "Okuma istatistikleri",
-        statsSelected: "Seçili yılda okunan",
-        statsAvg: "Aylık ortalama",
+        statsTitle: "İstatistik Yılı:",
+        statsSelected: "Seçilen Yıl:",
+        statsAvg: "Aylık Ort:",
         libraryTitle: "Kitaplığım",
         searchPlaceholder: "Kitap veya yazar ara…",
         filterAll: "Tüm kitaplar",
@@ -445,9 +477,9 @@ const dict = {
         btnSave: "Save book",
         btnUpdate: "Save changes",
         btnCancel: "Cancel editing",
-        statsTitle: "Reading statistics",
-        statsSelected: "Read in selected year",
-        statsAvg: "Monthly average",
+        statsTitle: "Stats Year:",
+        statsSelected: "Selected Year:",
+        statsAvg: "Monthly Avg:",
         libraryTitle: "My Library",
         searchPlaceholder: "Search book or author…",
         filterAll: "All books",
@@ -491,9 +523,9 @@ const dict = {
         btnSave: "Buch speichern",
         btnUpdate: "Änderungen speichern",
         btnCancel: "Abbrechen",
-        statsTitle: "Lesestatistik",
-        statsSelected: "Im gewählten Jahr gelesen",
-        statsAvg: "Monatlicher Durchschnitt",
+        statsTitle: "Statistikjahr:",
+        statsSelected: "Gewähltes Jahr:",
+        statsAvg: "Monatlicher Dur:",
         libraryTitle: "Meine Bibliothek",
         searchPlaceholder: "Buch oder Autor suchen…",
         filterAll: "Alle Bücher",
@@ -537,9 +569,9 @@ const dict = {
         btnSave: "Сохранить книгу",
         btnUpdate: "Сохранить изменения",
         btnCancel: "Отмена",
-        statsTitle: "Статистика чтения",
-        statsSelected: "Прочитано за выбранный год",
-        statsAvg: "В среднем за месяц",
+        statsTitle: "Год статистики:",
+        statsSelected: "Выбранный год:",
+        statsAvg: "В среднем/мес:",
         libraryTitle: "Моя библиотека",
         searchPlaceholder: "Поиск книги или автора…",
         filterAll: "Все книги",
@@ -583,17 +615,17 @@ const dict = {
         btnSave: "保存书籍",
         btnUpdate: "保存更改",
         btnCancel: "取消编辑",
-        statsTitle: "阅读统计",
-        statsSelected: "所选年份已读",
-        statsAvg: "每月平均",
+        statsTitle: "统计年份:",
+        statsSelected: "所选年份:",
+        statsAvg: "每月平均:",
         libraryTitle: "我的书库",
         searchPlaceholder: "搜索书名或作者…",
         filterAll: "全部书籍",
         filterRead: "已读",
         filterCurrent: "在读",
-        footerText: "Ekmekci Systems · Supabase 云数据库已激活。",
-        msgNoCover: "未在网上找到合适的封面。",
-        msgErr: "网络连接出错。",
+        footerText: "Ekmekci Systems · Supabase 云数据库已激活.",
+        msgNoCover: "未在网上找到合适的封面.",
+        msgErr: "网络连接出错.",
         msgDelete: "您确定要删除这本书吗？",
         emptySearch: "未找到符合的书籍.",
         emptyList: "尚未添加书籍.",
@@ -938,11 +970,6 @@ function renderStats(){
     $('yearCount').textContent = done.filter(b => Number(b.year) === new Date().getFullYear()).length;
     $('selectedYearTotal').textContent = yearly.length;
     $('monthlyAverage').textContent = (yearly.length / 12).toFixed(1);
-    
-    const curMonths = monthsData[currentLang] || monthsData['tr'];
-    const vals = curMonths.map(m => yearly.filter(b => b.month === m).length),
-          max = Math.max(1, ...vals);
-    $('monthChart').innerHTML = curMonths.map((m,i) => `<div class="chartrow"><span>${m.slice(0,3)}</span><div class="track"><div class="bar" style="width:${vals[i]/max*100}%"></div></div><b>${vals[i]}</b></div>`).join('');
 }
 
 function render(){
