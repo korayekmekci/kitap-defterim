@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#25d7eb">
     <title>Kitap Defterim (Supabase Cloud)</title>
     <!-- Supabase Kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -740,7 +740,7 @@ async function saveToCloud(item){
     $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':'Kaydediliyor...');
     try {
         if(editing !== null && editing !== undefined && editing !== ''){
-            // Güncelleme işlemi (ID eşleşmesi)
+            // Güncelleme işlemi
             const { error } = await db.from('books').update(item).eq('id', editing);
             if(error) throw error;
         } else {
@@ -808,8 +808,9 @@ $('bookModal').onclick = (e) => {
 
 $('modalEditBtn').onclick = () => {
     if(activeModalBookId !== null) {
+        const idToEdit = activeModalBookId;
         closeModal();
-        editBook(activeModalBookId);
+        editBook(idToEdit);
     }
 };
 
@@ -946,8 +947,9 @@ $('cancelEdit').onclick = resetForm;
 function editBook(id){
     const b = books.find(x => x.id == id);
     if(!b) return;
-    editing = b.id; // Doğrudan kayıttaki ID'yi alıyoruz
-    coverData = null;
+    editing = b.id;
+    coverData = b.cover || null;
+    
     $('title').value = b.title;
     $('author').value = b.author;
     $('month').value = b.month;
@@ -956,11 +958,6 @@ function editBook(id){
     $('rating').value = String(b.rating || 0);
     $('notes').value = b.notes || '';
     $('cover').value = '';
-    
-    // Eğer kayıtlı kapak varsa hafızaya alalım ki düzenlerken kaybolmasın
-    if(b.cover) {
-        coverData = b.cover;
-    }
 
     $('fileCustomLabel').innerHTML = b.cover ? '🖼️ <span style="color:var(--primary)">Mevcut kapak yüklü</span>' : `🖼️ <span>${t('btnSelectCover')}</span>`;
     $('coverHint').textContent = b.cover ? 'Mevcut kapak korunuyor.' : t('hintCover');
