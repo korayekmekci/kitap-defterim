@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#25d7eb">
+    <meta name="theme-color" content="#2563eb">
     <title>Kitap Defterim (Supabase Cloud)</title>
     <!-- Supabase Kütüphanesi -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -73,7 +73,7 @@
         .secondary{background:#eff6ff;color:var(--primary)}
         .danger{background:#fee2e2;color:var(--red)}
         
-        .cool-upload-btn {
+        .cool-upload-btn, .cool-export-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -89,10 +89,14 @@
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
             transition: all 0.25s ease;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             text-align: center;
         }
-        .cool-upload-btn:hover {
+        .cool-export-btn {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+        }
+        .cool-upload-btn:hover, .cool-export-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
         }
@@ -267,11 +271,16 @@
         </div>
     </header>
 
-    <section>
-        <label for="jsonFileInput" class="cool-upload-btn">
-            📂 <span data-i18n="btnLoadJson">JSON Yedek Dosyasını İçe Aktar</span>
+    <!-- YEDEKLEME VE İÇE/DIŞA AKTARMA BUTONLARI -->
+    <section style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+        <label for="jsonFileInput" class="cool-upload-btn" style="margin:0;">
+            📂 <span data-i18n="btnLoadJson">JSON İçe Aktar</span>
         </label>
         <input type="file" id="jsonFileInput" accept=".json" class="hidden">
+
+        <button type="button" id="exportJsonBtn" class="cool-export-btn">
+            💾 <span data-i18n="btnExportJson">JSON Yedek İndir</span>
+        </button>
     </section>
 
     <section class="stats">
@@ -407,7 +416,8 @@ const dict = {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
         appTitle: "Kitap Defterim",
         appSub: "Gerçek zamanlı senkronize akıllı kitaplık.",
-        btnLoadJson: "📂 JSON Yedek Dosyasını İçe Aktar",
+        btnLoadJson: "📂 JSON İçe Aktar",
+        btnExportJson: "💾 JSON Yedek İndir",
         btnSelectCover: "🖼️ Cihazdan Fotoğraf Seç",
         statRead: "Okunan kitap",
         statCurrent: "Devam eden",
@@ -453,7 +463,8 @@ const dict = {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
         appTitle: "My Book Diary",
         appSub: "Real-time synchronized smart library.",
-        btnLoadJson: "📂 Import JSON Backup File",
+        btnLoadJson: "📂 Import JSON",
+        btnExportJson: "💾 Export JSON Backup",
         btnSelectCover: "🖼️ Select Photo from Device",
         statRead: "Books read",
         statCurrent: "Currently reading",
@@ -499,7 +510,8 @@ const dict = {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
         appTitle: "Mein Bücherbuch",
         appSub: "Echtzeit synchronisierte intelligente Bibliothek.",
-        btnLoadJson: "📂 JSON-Sicherungsdatei importieren",
+        btnLoadJson: "📂 JSON Importieren",
+        btnExportJson: "💾 JSON Backup Exportieren",
         btnSelectCover: "🖼️ Foto vom Gerät wählen",
         statRead: "Gelesene Bücher",
         statCurrent: "Lese gerade",
@@ -545,7 +557,8 @@ const dict = {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
         appTitle: "Мои Книги",
         appSub: "Умная библиотека с синхронизацией в реальном времени.",
-        btnLoadJson: "📂 Импортировать резервную копию JSON",
+        btnLoadJson: "📂 Импорт JSON",
+        btnExportJson: "💾 Скачать бэкап JSON",
         btnSelectCover: "🖼️ Выбрать фото с устройства",
         statRead: "Прочитано книг",
         statCurrent: "Читаю сейчас",
@@ -591,7 +604,8 @@ const dict = {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
         appTitle: "我的书单",
         appSub: "实时同步的智能图书馆。",
-        btnLoadJson: "📂 导入 JSON 备份文件",
+        btnLoadJson: "📂 导入 JSON",
+        btnExportJson: "💾 导出 JSON 备份",
         btnSelectCover: "🖼️ 从设备选择照片",
         statRead: "已读书籍",
         statCurrent: "正在阅读",
@@ -740,11 +754,9 @@ async function saveToCloud(item){
     $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':'Kaydediliyor...');
     try {
         if(editing !== null && editing !== undefined && editing !== ''){
-            // Güncelleme işlemi
             const { error } = await db.from('books').update(item).eq('id', editing);
             if(error) throw error;
         } else {
-            // Yeni Ekleme işlemi
             const { error } = await db.from('books').insert([item]);
             if(error) throw error;
         }
@@ -818,6 +830,21 @@ $('modalDeleteBtn').onclick = () => {
     if(activeModalBookId !== null) {
         deleteBook(activeModalBookId);
     }
+};
+
+// --- JSON VERİLERİNİ DIŞA AKTARMA (EXPORT) ---
+$('exportJsonBtn').onclick = () => {
+    if(!books.length) {
+        alert(currentLang === 'en' ? 'No books found to export.' : 'Dışa aktarılacak kitap bulunamadı.');
+        return;
+    }
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(books, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `kitap_defterim_yedek_${new Date().toISOString().slice(0,10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
 };
 
 // --- JSON YEDEĞİNİ SUPABASE'E AKTARMA ---
