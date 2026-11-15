@@ -107,7 +107,6 @@
         </div>
     </header>
 
-    <!-- JSON YÜKLEME BUTONU -->
     <section>
         <label for="jsonFileInput" class="cool-upload-btn">
             📂 <span data-i18n="btnLoadJson">JSON Yedek Dosyasını İçe Aktar</span>
@@ -206,7 +205,6 @@
 const SUPABASE_URL = 'https://dzkwvcaoidnjuxrojdhz.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ERae92DVLQT8rCwJzqqKkg_Pq_56W5y';
 
-// Global değişken çakışmasını önlemek için nesne adı 'db' olarak ayarlandı
 let db = null;
 try {
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -337,7 +335,7 @@ const dict = {
         filterAll: "Alle Bücher",
         filterRead: "Gelesen",
         filterCurrent: "Lese gerade",
-        footerText: "Ekmekci Systems · Supabase Cloud Datenbank Aktiv.",
+        footerText: "Ekmekci Systems · Sicheres Lesetagebuch",
         msgNoCover: "Kein passendes Cover online gefunden.",
         msgErr: "Ein Internetverbindungsfehler ist aufgetreten.",
         msgDelete: "Möchten Sie dieses Buch löschen?",
@@ -379,7 +377,7 @@ const dict = {
         filterAll: "Все книги",
         filterRead: "Прочитанные",
         filterCurrent: "Читаемые",
-        footerText: "Ekmekci Systems · Облачная база данных Supabase активна.",
+        footerText: "Ekmekci Systems · Supabase Cloud Veritabanı Aktif.",
         msgNoCover: "Подходящая обложка в сети не найдена.",
         msgErr: "Ошибка подключения к интернету.",
         msgDelete: "Вы хотите удалить эту книгу?",
@@ -521,7 +519,7 @@ async function loadFromCloud(){
         const { data, error } = await db.from('books').select('*').order('id', { ascending: false });
         if(error) throw error;
         books = data || [];
-        $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Supabase connected':currentLang==='de'?'Supabase verbunden':currentLang==='ru'?'Supabase подключен':currentLang==='zh'?'Supabase 已连接':'Supabase ile senkronize');
+        $('syncStatus').textContent = '✅ ' + (currentLang==='en'?'Supabase connected':'Supabase ile senkronize');
     } catch(e) {
         console.error("Supabase bağlantı hatası:", e);
         $('syncStatus').textContent = '⚠️ Çevrimdışı mod';
@@ -534,10 +532,12 @@ async function loadFromCloud(){
 async function saveToCloud(item){
     $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':'Kaydediliyor...');
     try {
-        if(editing){
+        if(editing !== null && editing !== undefined){
+            // Güncelleme (Update)
             const { error } = await db.from('books').update(item).eq('id', editing);
             if(error) throw error;
         } else {
+            // Yeni Ekleme (Insert)
             const { error } = await db.from('books').insert([item]);
             if(error) throw error;
         }
@@ -564,7 +564,7 @@ async function deleteBook(id){
     }
 }
 
-// --- JSON YEDEĞİNİ SUPABASE'E TOPLU AKTARMA ---
+// --- JSON YEDEĞİNİ SUPABASE'E AKTARMA ---
 $('jsonFileInput').onchange = (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -574,8 +574,6 @@ $('jsonFileInput').onchange = (e) => {
             const importedData = JSON.parse(event.target.result);
             if(Array.isArray(importedData)) {
                 $('syncStatus').textContent = '🔄 Toplu yükleniyor...';
-                // Supabase'e toplu insert
-                // Not: id alanını veritabanının otomatik üretmesi için çıkarıyoruz
                 const cleanData = importedData.map(({id, ...rest}) => rest);
                 const { error } = await db.from('books').insert(cleanData);
                 if(error) throw error;
@@ -742,7 +740,7 @@ function render(){
     $('books').innerHTML = list.map(b => {
         const translatedMonth = translateMonth(b.month, currentLang);
         const translatedNote = translateNote(b.notes, currentLang);
-        return `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook('${b.id}')">${txtEdit}</button></label><button class="danger" onclick="deleteBook('${b.id}')">${txtDelete}</button></div></div></article>`;
+        return `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook(${b.id})">${txtEdit}</button></label><button class="danger" onclick="deleteBook(${b.id})">${txtDelete}</button></div></div></article>`;
     }).join('');
 }
 
