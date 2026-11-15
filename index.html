@@ -65,7 +65,8 @@
         .toolbar{display:flex;gap:8px;margin:12px 0}
         .toolbar input{flex:1;min-width:0}
         .toolbar select{width:140px}
-        .book{display:flex;gap:11px;padding:12px;margin-bottom:10px}
+        .book{display:flex;gap:11px;padding:12px;margin-bottom:10px;cursor:pointer;transition:all 0.2s ease}
+        .book:hover{border-color:var(--green);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.03)}
         .cover{width:68px;height:96px;flex:0 0 68px;border-radius:6px;object-fit:cover;background:#e9e6dc}
         .placeholder{display:grid;place-items:center;font-size:25px}
         .bookbody{flex:1;min-width:0}
@@ -75,7 +76,7 @@
         .tag{font-size:10px;padding:4px 8px;border-radius:20px;background:#edf1ec;color:var(--green);font-weight:700}
         .tag.current{background:#f5eddb;color:#85642d}
         .rating{color:#a77a2f;letter-spacing:1px;margin-top:5px}
-        .note{font-size:12px;color:#69736d;margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+        .note{font-size:12px;color:#69736d;margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
         .actions button{padding:6px 9px;font-size:11px}
         .empty{text-align:center;padding:25px 14px;color:var(--muted);background:var(--paper);border:1px dashed #d8d4c9;border-radius:14px}
         .yearline{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -85,6 +86,104 @@
         .bar{height:100%;background:var(--green);border-radius:20px}
         .footer{text-align:center;color:var(--muted);font-size:11px;margin-top:22px}
         #syncStatus{font-size:11px;color:var(--green);text-align:right;margin-top:5px;font-weight:600}
+
+        /* --- MODAL (POP-UP) STİLLERİ --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(37, 51, 46, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 12px 32px rgba(37, 51, 46, 0.15);
+            transform: translateY(20px);
+            transition: transform 0.25s ease;
+            position: relative;
+        }
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            background: #f0ede6;
+            border: none;
+            border-radius: 50%;
+            width: 32px; height: 32px;
+            font-size: 16px;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            color: var(--ink);
+            transition: background 0.2s;
+        }
+        .modal-close:hover {
+            background: #e2ded4;
+        }
+        .modal-header {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .modal-cover {
+            width: 90px; height: 130px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #e9e6dc;
+            flex: 0 0 90px;
+        }
+        .modal-title-area h3 {
+            font: 600 22px Georgia;
+            margin: 0 0 4px;
+            color: var(--ink);
+            overflow-wrap: anywhere;
+        }
+        .modal-author {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+        .modal-section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--green);
+            font-weight: 700;
+            margin: 16px 0 6px;
+        }
+        .modal-notes-box {
+            background: #f8f6f0;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 14px;
+            color: var(--ink);
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            line-height: 1.5;
+            min-height: 80px;
+        }
     </style>
 </head>
 <body>
@@ -201,6 +300,28 @@
     <section class="footer" data-i18n="footerText">Ekmekci Systems · Supabase Cloud Veritabanı Aktif.</section>
 </main>
 
+<!-- DETAY MODALI (POP-UP) -->
+<div id="bookModal" class="modal-overlay">
+    <div class="modal-card">
+        <button class="modal-close" id="closeModalBtn">✕</button>
+        <div class="modal-header">
+            <div id="modalCoverContainer"></div>
+            <div class="modal-title-area">
+                <h3 id="modalTitle"></h3>
+                <div class="modal-author" id="modalAuthor"></div>
+                <div class="meta" id="modalMeta"></div>
+                <div class="rating" id="modalRating" style="margin-top:6px;"></div>
+            </div>
+        </div>
+        <div class="modal-section-title" data-i18n="modalNotesTitle">Kişisel Notlar / Düşünceler</div>
+        <div class="modal-notes-box" id="modalNotes"></div>
+        <div class="actions" style="margin-top:20px; justify-content: flex-end;">
+            <button class="secondary" id="modalEditBtn" data-i18n="btnEdit">Düzenle</button>
+            <button class="danger" id="modalDeleteBtn" data-i18n="btnDelete">Sil</button>
+        </div>
+    </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://dzkwvcaoidnjuxrojdhz.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ERae92DVLQT8rCwJzqqKkg_Pq_56W5y';
@@ -212,7 +333,7 @@ try {
     console.error("Supabase başlatılamadı:", err);
 }
 
-let books = [], editing = null, coverData = null;
+let books = [], editing = null, coverData = null, activeModalBookId = null;
 let currentLang = localStorage.getItem('kitapDefterim_lang') || 'tr';
 
 const dict = {
@@ -256,7 +377,10 @@ const dict = {
         msgErr: "İnternet bağlantısında bir sorun oluştu.",
         msgDelete: "kitabını silmek istiyor musun?",
         emptySearch: "Aramana uygun kitap bulunamadı.",
-        emptyList: "Henüz kitap eklemedin."
+        emptyList: "Henüz kitap eklemedin.",
+        modalNotesTitle: "Kişisel Notlar / Düşünceler",
+        btnEdit: "Düzenle",
+        btnDelete: "Sil"
     },
     en: {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
@@ -298,7 +422,10 @@ const dict = {
         msgErr: "An internet connection error occurred.",
         msgDelete: "Do you want to delete this book?",
         emptySearch: "No matching books found.",
-        emptyList: "No books added yet."
+        emptyList: "No books added yet.",
+        modalNotesTitle: "Personal Notes / Thoughts",
+        btnEdit: "Edit",
+        btnDelete: "Delete"
     },
     de: {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
@@ -335,12 +462,15 @@ const dict = {
         filterAll: "Alle Bücher",
         filterRead: "Gelesen",
         filterCurrent: "Lese gerade",
-        footerText: "Ekmekci Systems · Sicheres Lesetagebuch",
+        footerText: "Ekmekci Systems · Supabase Cloud Datenbank Aktiv.",
         msgNoCover: "Kein passendes Cover online gefunden.",
         msgErr: "Ein Internetverbindungsfehler ist aufgetreten.",
         msgDelete: "Möchten Sie dieses Buch löschen?",
         emptySearch: "Keine passenden Bücher gefunden.",
-        emptyList: "Noch keine Bücher hinzugefügt."
+        emptyList: "Noch keine Bücher hinzugefügt.",
+        modalNotesTitle: "Persönliche Notizen",
+        btnEdit: "Bearbeiten",
+        btnDelete: "Löschen"
     },
     ru: {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
@@ -382,7 +512,10 @@ const dict = {
         msgErr: "Ошибка подключения к интернету.",
         msgDelete: "Вы хотите удалить эту книгу?",
         emptySearch: "Книги не найдены.",
-        emptyList: "Книги пока не добавлены."
+        emptyList: "Книги пока не добавлены.",
+        modalNotesTitle: "Личные заметки",
+        btnEdit: "Редактировать",
+        btnDelete: "Удалить"
     },
     zh: {
         eyebrow: "Ekmekci Systems (Supabase Cloud)",
@@ -424,7 +557,10 @@ const dict = {
         msgErr: "网络连接出错。",
         msgDelete: "您确定要删除这本书吗？",
         emptySearch: "未找到符合的书籍.",
-        emptyList: "尚未添加书籍."
+        emptyList: "尚未添加书籍.",
+        modalNotesTitle: "个人笔记",
+        btnEdit: "编辑",
+        btnDelete: "删除"
     }
 };
 
@@ -533,11 +669,9 @@ async function saveToCloud(item){
     $('syncStatus').textContent = '🔄 ' + (currentLang==='en'?'Saving...':'Kaydediliyor...');
     try {
         if(editing !== null && editing !== undefined){
-            // Güncelleme (Update)
             const { error } = await db.from('books').update(item).eq('id', editing);
             if(error) throw error;
         } else {
-            // Yeni Ekleme (Insert)
             const { error } = await db.from('books').insert([item]);
             if(error) throw error;
         }
@@ -556,6 +690,7 @@ async function deleteBook(id){
         try {
             const { error } = await db.from('books').delete().eq('id', id);
             if(error) throw error;
+            closeModal();
             if(editing === id) resetForm();
             loadFromCloud();
         } catch(e) {
@@ -563,6 +698,53 @@ async function deleteBook(id){
         }
     }
 }
+
+// --- MODAL (POP-UP) İŞLEMLERİ ---
+function openModal(id) {
+    const b = books.find(x => x.id === id);
+    if(!b) return;
+    activeModalBookId = id;
+
+    $('modalTitle').textContent = b.title;
+    $('modalAuthor').textContent = b.author;
+    
+    const translatedMonth = translateMonth(b.month, currentLang);
+    const txtRead = currentLang==='en'?'Read':'Okudum';
+    const txtCurrent = currentLang==='en'?'Reading':'Devam ediyorum';
+    
+    $('modalMeta').innerHTML = `<span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span>`;
+    $('modalRating').innerHTML = b.rating ? `${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}` : '';
+    
+    const translatedNote = translateNote(b.notes, currentLang);
+    $('modalNotes').textContent = translatedNote || (currentLang==='en'?'No notes added for this book yet.':'Bu kitap için henüz not eklenmemiş.');
+
+    $('modalCoverContainer').innerHTML = b.cover ? `<img class="modal-cover" src="${b.cover}" alt="Kapak">` : '<div class="modal-cover placeholder" style="display:grid;place-items:center;font-size:32px;">📖</div>';
+
+    $('bookModal').classList.add('active');
+}
+
+function closeModal() {
+    $('bookModal').classList.remove('active');
+    activeModalBookId = null;
+}
+
+$('closeModalBtn').onclick = closeModal;
+$('bookModal').onclick = (e) => {
+    if(e.target === $('bookModal')) closeModal();
+};
+
+$('modalEditBtn').onclick = () => {
+    if(activeModalBookId !== null) {
+        closeModal();
+        editBook(activeModalBookId);
+    }
+};
+
+$('modalDeleteBtn').onclick = () => {
+    if(activeModalBookId !== null) {
+        deleteBook(activeModalBookId);
+    }
+};
 
 // --- JSON YEDEĞİNİ SUPABASE'E AKTARMA ---
 $('jsonFileInput').onchange = (e) => {
@@ -734,13 +916,11 @@ function render(){
     }
     const txtRead = currentLang==='en'?'Read':'Okudum';
     const txtCurrent = currentLang==='en'?'Reading':'Devam ediyorum';
-    const txtEdit = currentLang==='en'?'Edit':'Düzenle';
-    const txtDelete = currentLang==='en'?'Delete':'Sil';
     
     $('books').innerHTML = list.map(b => {
         const translatedMonth = translateMonth(b.month, currentLang);
         const translatedNote = translateNote(b.notes, currentLang);
-        return `<article class="book">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}<div class="actions"><label style="display:inline"><button class="secondary" onclick="editBook(${b.id})">${txtEdit}</button></label><button class="danger" onclick="deleteBook(${b.id})">${txtDelete}</button></div></div></article>`;
+        return `<article class="book" onclick="openModal(${b.id})">${b.cover ? `<img class="cover" src="${b.cover}" alt="Kitap kapağı">` : '<div class="cover placeholder">📖</div>'}<div class="bookbody"><h3>${esc(b.title)}</h3><div class="author">${esc(b.author)}</div><div class="meta"><span class="tag">${esc(translatedMonth)} ${esc(b.year)}</span><span class="tag ${b.status==='current'?'current':''}">${b.status==='read'?txtRead:txtCurrent}</span></div>${b.rating ? `<div class="rating">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>` : ''}${translatedNote ? `<div class="note">${esc(translatedNote)}</div>` : ''}</div></article>`;
     }).join('');
 }
 
